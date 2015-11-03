@@ -22,28 +22,35 @@
 #include "zpr.h"
 
 
-GLuint* vertexArrayObjID, shader;
+GLuint* vertexArrayObjID, vertexBufferObjID, shader;
+
+Point3D cam, point;
 
 mat4 projectionMatrix;
 mat4 viewMatrix;
+
+GLfloat vertices[] = {-0.5f,-0.5f,0.0f, -0.5f,0.5f,0.0f, 0.5f,-0.5f,0.0f };
+
 // Drawing routine
 void Display()
 {
-	GLfloat vertices[4][3] = {
-	{-0.5,0.0,-0.5},
-	{0.5,0.0,-0.5},
-	{0.5,0.0,0.5},
-	{-0.5,0.5,0.5}
-	};
-	// Allocate and activate Vertex Array Object
-	glGenVertexArrays(1, &vertexArrayObjID);
+	// Clear framebuffer & zbuffer
+	glClearColor(0.1, 0.1, 0.3, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+/*
 	glBindVertexArray(vertexArrayObjID);
-	// Allocate Vertex Buffer Objects
-	//glGenBuffers(1, &vertexBufferObjID);
-
-	glBindVertexArray(vertexArrayObjID);
+	glUseProgram(shader);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, NULL);
-
+*/
+	// clear the screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Draw the triangle
+	glBindVertexArray(vertexArrayObjID);// Select VAO
+	glDrawArrays(GL_TRIANGLES, 0, 3);// draw object
+	glFlush();
+	
 	glutSwapBuffers();
 }
 
@@ -58,14 +65,40 @@ void Init()
 {
 	shader = loadShaders("shader.vert", "shader.frag");
 
-	GLfloat rotationMatrix[] = {0.7f, -0.7f, 0.0f, 0.0f,
-		0.7f, 0.7f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
+	printError("init shader");
+
+	cam = SetVector(0, 5, 15);
+	point = SetVector(0, 1, 0);
+
+	
+
+	zprInit(&viewMatrix, cam, point);
+	
+	glUseProgram(shader);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
+	
+	// Allocate and activate Vertex Array Object
+	glGenVertexArrays(1, &vertexArrayObjID);
+	glBindVertexArray(vertexArrayObjID);
+	// Allocate Vertex Buffer Objects
+
+	glGenBuffers(1, &vertexBufferObjID);
+	// VBO for vertex data
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjID);
+	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"),
+	3, GL_FLOAT, GL_FALSE, 0, 0); 
+	glEnableVertexAttribArray(glGetAttribLocation(shader, "in_Position"));
 
 }
 
-int main(int argc, char **argv)
+void Idle()
+{
+  glutPostRedisplay();
+}
+
+int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -75,10 +108,11 @@ int main(int argc, char **argv)
 	
 	glutDisplayFunc(Display);
 	glutReshapeFunc(Reshape);
+	glutIdleFunc(Idle);
 
 	Init();
 	
 	glutMainLoop();
-	return 0;
+	exit(0);
 }
 
