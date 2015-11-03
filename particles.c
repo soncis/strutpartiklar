@@ -1,9 +1,10 @@
 
-// Demo of heavily simplified sprite engine
-// by Ingemar Ragnemalm 2009
-// used as base for lab 4 in TSBK03.
 // OpenGL 3 conversion 2013.
 //gcc particles.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 
 #ifdef __APPLE__
 	#include <OpenGL/gl3.h>
@@ -14,38 +15,53 @@
 	#include "MicroGlut.h"
 #endif
 
-#include <stdlib.h>
-#include "LoadTGA.h"
+
+#include "VectorUtils3.h"
 #include "GL_utilities.h"
-#include <math.h>
+#include "loadobj.h"
+#include "zpr.h"
 
-// Lgg till egna globaler hr efter behov.
-float deltaT = 30000;
-float oldTime;
-bool huntFood = false;
-float maxDist = 300.0;
-void SpriteBehavior() // Din kod!
-{
-// Lgg till din labbkod hr. Det gr bra att ndra var som helst i
-// koden i vrigt, men mycket kan samlas hr. Du kan utg frn den
-// globala listroten, gSpriteRoot, fr att kontrollera alla sprites
-// hastigheter och positioner, eller arbeta frn egna globaler.
-}
 
+GLuint* vertexArrayObjID, shader;
+
+mat4 projectionMatrix;
+mat4 viewMatrix;
 // Drawing routine
 void Display()
 {
+	GLfloat vertices[4][3] = {
+	{-0.5,0.0,-0.5},
+	{0.5,0.0,-0.5},
+	{0.5,0.0,0.5},
+	{-0.5,0.5,0.5}
+	};
+	// Allocate and activate Vertex Array Object
+	glGenVertexArrays(1, &vertexArrayObjID);
+	glBindVertexArray(vertexArrayObjID);
+	// Allocate Vertex Buffer Objects
+	//glGenBuffers(1, &vertexBufferObjID);
+
+	glBindVertexArray(vertexArrayObjID);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, NULL);
+
 	glutSwapBuffers();
 }
 
-void Reshape(int h, int v)
+void Reshape(int h, int w)
 {
-	glViewport(0, 0, h, v);
+	glViewport(0, 0, h, w);
+	GLfloat ratio = (GLfloat) w / (GLfloat) h;
+	projectionMatrix = perspective(90, ratio, 1.0, 1000);
 }
 
 void Init()
 {
-	
+	shader = loadShaders("shader.vert", "shader.frag");
+
+	GLfloat rotationMatrix[] = {0.7f, -0.7f, 0.0f, 0.0f,
+		0.7f, 0.7f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
 
 }
 
@@ -58,7 +74,6 @@ int main(int argc, char **argv)
 	glutCreateWindow("Struta Hårt");
 	
 	glutDisplayFunc(Display);
-	//glutTimerFunc(20, Timer, 0); // Should match the screen synch
 	glutReshapeFunc(Reshape);
 
 	Init();
