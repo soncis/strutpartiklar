@@ -5,65 +5,67 @@
 // OpenGL 3 conversion 2013.
 //gcc particles.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
 
-#ifdef __APPLE__
-	#include <OpenGL/gl3.h>
-	#include "MicroGlut.h"
-	// uses framework Cocoa
-#else
-	#include <GL/gl.h>
-	#include "MicroGlut.h"
-#endif
 
-#include <stdlib.h>
-#include "LoadTGA.h"
-#include "GL_utilities.h"
-#include <math.h>
+include <OpenGL/gl3.h>
+#include "MicroGlut.h"
+// Globals
+// Data would normally be read from files
+GLfloat vertices[] = {-0.5f,-0.5f,0.0f, -0.5f,0.5f,0.0f, 0.5f,-0.5f,0.0f };
+// vertex array object
 
-// Lgg till egna globaler hr efter behov.
-float deltaT = 30000;
-float oldTime;
-bool huntFood = false;
-float maxDist = 300.0;
-void SpriteBehavior() // Din kod!
+unsigned int vertexArrayObjID;
+void init(void)
 {
-// Lgg till din labbkod hr. Det gr bra att ndra var som helst i
-// koden i vrigt, men mycket kan samlas hr. Du kan utg frn den
-// globala listroten, gSpriteRoot, fr att kontrollera alla sprites
-// hastigheter och positioner, eller arbeta frn egna globaler.
-}
+	// vertex buffer object, used for uploading vertex data
+	unsigned int vertexBufferObjID;
 
-// Drawing routine
-void Display()
-{
-	glutSwapBuffers();
-}
-
-void Reshape(int h, int v)
-{
-	glViewport(0, 0, h, v);
-}
-
-void Init()
-{
+	// Reference to shader program:
+	GLuint program;
 	
+	// GL inits
+	glClearColor(0.2,0.2,0.5,0);
+	glEnable(GL_DEPTH_TEST);
+	
+	// Load and compile shader
+	program = glutLoadShaders("minimal.vert", "minimal.frag");
+	glUseProgram(program);
 
+	// Allocate and activate Vertex Array Object
+	glGenVertexArrays(1, &vertexArrayObjID);
+	glBindVertexArray(vertexArrayObjID);
+
+	// Allocate Vertex Buffer Objects
+	glGenBuffers(1, &vertexBufferObjID);
+
+	// VBO for vertex data
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjID);
+	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 3, GL_FLOAT, GL_FALSE, 0, 0); 
+	glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
 }
 
-int main(int argc, char **argv)
+void display(void)
 {
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutInitWindowSize(800, 600);
-	glutInitContextVersion(3, 2);
-	glutCreateWindow("Struta Hårt");
-	
-	glutDisplayFunc(Display);
-	//glutTimerFunc(20, Timer, 0); // Should match the screen synch
-	glutReshapeFunc(Reshape);
+	// clear the screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Draw the triangle
+	glBindVertexArray(vertexArrayObjID);// Select VAO
+	glDrawArrays(GL_TRIANGLES, 0, 3);// draw object
+	glFlush();
+}
 
-	Init();
-	
+int main(int argc, const char *argv[])
+{
+	glutInit();
+	glutCreateWindow ("GL3 white triangle example");
+	glutDisplayFunc(display); 
+	init ();
 	glutMainLoop();
-	return 0;
 }
+
+
+
+
+
+
 
