@@ -1,3 +1,4 @@
+
 // Demo of heavily simplified sprite engine
 // by Ingemar Ragnemalm 2009
 // used as base for lab 4 in TSBK03.
@@ -65,3 +66,4 @@ int main(int argc, char **argv)
 	glutMainLoop();
 	return 0;
 }
+
