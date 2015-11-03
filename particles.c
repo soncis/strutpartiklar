@@ -1,38 +1,69 @@
 
-// Demo of heavily simplified sprite engine
-// by Ingemar Ragnemalm 2009
-// used as base for lab 4 in TSBK03.
 // OpenGL 3 conversion 2013.
 //gcc particles.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
 
 
-include <OpenGL/gl3.h>
-#include "MicroGlut.h"
-// Globals
-// Data would normally be read from files
-GLfloat vertices[] = {-0.5f,-0.5f,0.0f, -0.5f,0.5f,0.0f, 0.5f,-0.5f,0.0f };
-// vertex array object
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 
-unsigned int vertexArrayObjID;
-void init(void)
+#ifdef __APPLE__
+	#include <OpenGL/gl3.h>
+	#include "MicroGlut.h"
+	// uses framework Cocoa
+#else
+	#include <GL/gl.h>
+	#include "MicroGlut.h"
+#endif
+
+
+#include "VectorUtils3.h"
+#include "GL_utilities.h"
+#include "loadobj.h"
+#include "zpr.h"
+
+
+GLuint* vertexArrayObjID, shader;
+
+mat4 projectionMatrix;
+mat4 viewMatrix;
+// Drawing routine
+void Display()
 {
-	// vertex buffer object, used for uploading vertex data
-	unsigned int vertexBufferObjID;
-
-	// Reference to shader program:
-	GLuint program;
-	
-	// GL inits
-	glClearColor(0.2,0.2,0.5,0);
-	glEnable(GL_DEPTH_TEST);
-	
-	// Load and compile shader
-	program = glutLoadShaders("minimal.vert", "minimal.frag");
-	glUseProgram(program);
-
+	GLfloat vertices[4][3] = {
+	{-0.5,0.0,-0.5},
+	{0.5,0.0,-0.5},
+	{0.5,0.0,0.5},
+	{-0.5,0.5,0.5}
+	};
 	// Allocate and activate Vertex Array Object
 	glGenVertexArrays(1, &vertexArrayObjID);
 	glBindVertexArray(vertexArrayObjID);
+	// Allocate Vertex Buffer Objects
+	//glGenBuffers(1, &vertexBufferObjID);
+
+	glBindVertexArray(vertexArrayObjID);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, NULL);
+
+	glutSwapBuffers();
+}
+
+void Reshape(int h, int w)
+{
+	glViewport(0, 0, h, w);
+	GLfloat ratio = (GLfloat) w / (GLfloat) h;
+	projectionMatrix = perspective(90, ratio, 1.0, 1000);
+}
+
+void Init()
+{
+	shader = loadShaders("shader.vert", "shader.frag");
+
+	GLfloat rotationMatrix[] = {0.7f, -0.7f, 0.0f, 0.0f,
+		0.7f, 0.7f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f };
+
 
 	// Allocate Vertex Buffer Objects
 	glGenBuffers(1, &vertexBufferObjID);
@@ -46,13 +77,16 @@ void init(void)
 
 void display(void)
 {
-	// clear the screen
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// Draw the triangle
-	glBindVertexArray(vertexArrayObjID);// Select VAO
-	glDrawArrays(GL_TRIANGLES, 0, 3);// draw object
-	glFlush();
-}
+
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitWindowSize(800, 600);
+	glutInitContextVersion(3, 2);
+	glutCreateWindow("Struta Hårt");
+	
+	glutDisplayFunc(Display);
+	glutReshapeFunc(Reshape);
+
 
 int main(int argc, const char *argv[])
 {
