@@ -29,7 +29,7 @@ Point3D cam, point;
 mat4 projectionMatrix;
 mat4 viewMatrix;
 
-GLfloat vertices[] = {-0.5f,-0.5f,0.0f, -0.5f,0.5f,0.0f, 0.5f,-0.5f,0.0f };
+GLfloat vertices[] = {-0.5f,-0.5f,0.0f, 0.5f,-0.5f,0.0f, 0.5f,0.5f,0.0, -0.5f,0.5f,0.0f};
 
 // Drawing routine
 void Display()
@@ -48,7 +48,8 @@ void Display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// Draw the triangle
 	glBindVertexArray(vertexArrayObjID);// Select VAO
-	glDrawArrays(GL_TRIANGLES, 0, 3);// draw object
+	//glDrawArrays(GL_TRIANGLES, 0, 4);// draw object
+	glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_BYTE, NULL);	
 	glFlush();
 	
 	glutSwapBuffers();
@@ -87,9 +88,9 @@ void Init()
 	// VBO for vertex data
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjID);
 	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(glGetAttribLocation(program, "in_Position"),
+	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"),
 	3, GL_FLOAT, GL_FALSE, 0, 0); 
-	glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
+	glEnableVertexAttribArray(glGetAttribLocation(shader, "in_Position"));
 
 }
 
