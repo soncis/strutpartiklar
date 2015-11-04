@@ -27,10 +27,11 @@ GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 Point3D cam, point;
 
 mat4 projectionMatrix;
-GLfloat viewMatrix[] = { 0.7f, 0.0f, -0.7f, 0.0f,
+mat4 viewMatrix;
+/*GLfloat viewMatrix[] = { 0.7f, 0.0f, -0.7f, 0.0f,
 0.0f, 1.0f, 0.0f, 0.0f,
 0.7f, 0.0f, 0.7f, 0.0f,
-0.0f, 0.0f, 0.0f, 1.0f };
+0.0f, 0.0f, 0.0f, 1.0f };*/
 
 GLfloat vertices[] = {
         // Left bottom triangle
@@ -69,9 +70,11 @@ void Display()
 
 void Reshape(int h, int w)
 {
-	glViewport(0, 0, h, w);
-	GLfloat ratio = (GLfloat) w / (GLfloat) h;
-	projectionMatrix = perspective(90, ratio, 0.1, 1000);
+
+	glViewport(0, 0, w, h);
+    	GLfloat ratio = (GLfloat) w / (GLfloat) h;
+   	projectionMatrix = perspective(90, ratio, 0.1, 1000);
+    	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 }
 
 void Init()
@@ -92,16 +95,17 @@ void Init()
 
 	printError("init shader");
 	
-	//cam = SetVector(0, 2, 2);
-	//point = SetVector(0, 1, 0);
+	cam = SetVector(0, 2, 2);
+	point = SetVector(0, 0, 0);
 
 	
 
-	//zprInit(&viewMatrix, cam, point);
+	zprInit(&viewMatrix, cam, point);
 	
 	glUseProgram(shader);
+	projectionMatrix = perspective(90, 1.0, 0.1, 1000); // It would be silly to upload an uninitialized matrix
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
 	
 	// Allocate and activate Vertex Array Object
 	glGenVertexArrays(1, &vertexArrayObjID);
