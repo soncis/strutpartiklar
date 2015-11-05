@@ -21,87 +21,36 @@
 #include "zpr.h"
 
 
-GLuint* vertexArrayObjID, shader;
+GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
-void OnTimer(int value);
+Point3D cam, point;
 
 mat4 projectionMatrix;
 mat4 viewMatrix;
 
-//----------------------Globals-------------------------------------------------
-Point3D cam, point;
-//Model *model1;
-//FBOstruct *fbo1, *fbo2, *fbo3;
-//GLuint phongshader = 0, plaintextureshader = 0, truncshader = 0, filtershader = 0, mixshader =0;
-//int switch_ = 1; 
-
-//-------------------------------------------------------------------------------------
-
-
-void Init()
-{
-	dumpInfo();  // shader info
-	
-	// GL inits
-	glClearColor(0.1, 0.1, 0.3, 0);
-	glClearDepth(1.0);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	printError("GL inits");
-
-	// Load and compile shaders
-	shader = loadShaders("shader.vert", "shader.frag");
-	
-	printError("init shader");
-
-	// load the model
-	//model1 = LoadModelPlus("teapot.obj");
-
-	cam = SetVector(0, 5, 15);
-	point = SetVector(0, 1, 0);
-
-	glutTimerFunc(5, &OnTimer, 0);
-
-	zprInit(&viewMatrix, cam, point);	
-
-	GLfloat rotationMatrix[] = 
-	{
-		0.7f, -0.7f, 0.0f, 0.0f,
-		0.7f, 0.7f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f };
-
-}
-
-void OnTimer(int value)
-{
-	glutPostRedisplay();
-	glutTimerFunc(5, &OnTimer, value);
-}
+// triangelns vertexar
+GLfloat vertices[] = {-0.5f,-0.5f,0.0f, -0.5f,0.5f,0.0f, 0.5f,-0.5f,0.0f };
 
 // Drawing routine
 void Display()
 {
-	GLfloat vertices[4][3] = 
-	{
-		{-0.5, 0.0, -0.5},
-		{0.5, 0.0, -0.5},
-		{0.5, 0.0, 0.5},
-		{-0.5, 0.5, 0.5}
-	};
-
-	// Activate shader program
+	// Clear framebuffer & zbuffer
+	glClearColor(0.1, 0.1, 0.3, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+/*
+	glBindVertexArray(vertexArrayObjID);
 	glUseProgram(shader);
-
-	// Allocate and activate Vertex Array Object
-	glGenVertexArrays(1, &vertexArrayObjID);
-	glBindVertexArray(vertexArrayObjID);
-
-	// Allocate Vertex Buffer Objects
-	//glGenBuffers(1, &vertexBufferObjID);
-	glBindVertexArray(vertexArrayObjID);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, NULL);
-
+*/
+	// clear the screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Draw the triangle
+	glBindVertexArray(vertexArrayObjID);// Select VAO
+	glDrawArrays(GL_TRIANGLES, 0, 3);// draw object
+	glFlush();
+	
 	glutSwapBuffers();
 }
 
@@ -112,15 +61,43 @@ void Reshape(int h, int w)
 	projectionMatrix = perspective(90, ratio, 1.0, 1000);
 }
 
-// This function is called whenever the computer is idle
-// As soon as the machine is idle, ask GLUT to trigger rendering of a new
-// frame
-void idle()
+void Init()
+{
+	shader = loadShaders("shader.vert", "shader.frag");
+
+	printError("init shader");
+
+	cam = SetVector(0, 5, 15);
+	point = SetVector(0, 1, 0);
+
+	
+	zprInit(&viewMatrix, cam, point);
+	
+	glUseProgram(shader);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
+	
+	// Allocate and activate Vertex Array Object
+	glGenVertexArrays(1, &vertexArrayObjID);
+	glBindVertexArray(vertexArrayObjID);
+	// Allocate Vertex Buffer Objects
+
+	glGenBuffers(1, &vertexBufferObjID);
+	// VBO for vertex data
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjID);
+	glBufferData(GL_ARRAY_BUFFER, 9*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"),
+	3, GL_FLOAT, GL_FALSE, 0, 0); 
+	glEnableVertexAttribArray(glGetAttribLocation(shader, "in_Position"));
+
+}
+
+void Idle()
 {
   glutPostRedisplay();
 }
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -130,9 +107,11 @@ int main(int argc, char **argv)
 	
 	glutDisplayFunc(Display);
 	glutReshapeFunc(Reshape);
+	glutIdleFunc(Idle);
 
 	Init();
 	
 	glutMainLoop();
-	return 0;
+	exit(0);
 }
+
