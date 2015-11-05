@@ -34,13 +34,13 @@ mat4 viewMatrix;
 
 GLfloat vertices[] = {
         // Left bottom triangle
-        -0.5f, 0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
+        -1.0f, 1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
         // Right top triangle
-        0.5f, -0.5f, 0.0f,
-        0.5f, 0.5f, 0.0f,
-        -0.5f, 0.5f, 0.0f
+        1.0f, -1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f
 };
 
 // Drawing routine
@@ -49,13 +49,7 @@ void Display()
 	// Clear framebuffer & zbuffer
 	glClearColor(0.1, 0.1, 0.3, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
-/*
-	glBindVertexArray(vertexArrayObjID);
-	glUseProgram(shader);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, NULL);
-*/
+
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// Draw the triangle
@@ -90,11 +84,11 @@ void Init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	shader = loadShaders("shader.vert", "shader.frag");
+shader = loadShaders("shader.vert", "shader.frag");
 
 	printError("init shader");
 	
-	cam = SetVector(0, 2, 2);
+	cam = SetVector(0, -1.5, 0.5);
 	point = SetVector(0, 0, 0);
 
 	
@@ -130,7 +124,7 @@ int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutInitWindowSize(800, 600);
+	glutInitWindowSize(600, 600);
 	glutInitContextVersion(3, 2);
 	glutCreateWindow("Struta Hårt");
 	

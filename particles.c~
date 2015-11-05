@@ -35,13 +35,13 @@ mat4 viewMatrix;
 
 GLfloat vertices[] = {
         // Left bottom triangle
-        -0.5f, 0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
+        -1.0f, 1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
         // Right top triangle
-        0.5f, -0.5f, 0.0f,
-        0.5f, 0.5f, 0.0f,
-        -0.5f, 0.5f, 0.0f
+        1.0f, -1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f
 };
 
 
@@ -92,11 +92,15 @@ void Init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	shader = loadShaders("shader.vert", "shader.frag");
+shader = loadShaders("shader.vert", "shader.frag");
 
 	printError("init shader");
 	
+<<<<<<< HEAD
 	cam = SetVector(0, 2, 2);
+=======
+	cam = SetVector(0, -1.5, 0.5);
+>>>>>>> 0368988adb8b0ac9a4ebb974fe1bcce64bda807f
 	point = SetVector(0, 0, 0);
 
 	
@@ -131,7 +135,7 @@ int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	glutInitWindowSize(800, 600);
+	glutInitWindowSize(600, 600);
 	glutInitContextVersion(3, 2);
 	glutCreateWindow("Struta Hårt");
 	
