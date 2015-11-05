@@ -50,13 +50,7 @@ void Display()
 	// Clear framebuffer & zbuffer
 	glClearColor(0.1, 0.1, 0.3, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
-/*
-	glBindVertexArray(vertexArrayObjID);
-	glUseProgram(shader);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, NULL);
-*/
+
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// Draw the triangle

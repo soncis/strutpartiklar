@@ -55,8 +55,7 @@ void Display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// Draw the triangle
 	glBindVertexArray(vertexArrayObjID);// Select VAO
-	glDrawArrays(GL_TRIANGLES, 0, 6);// draw object
-	//glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_BYTE, NULL);	
+	glDrawArrays(GL_TRIANGLES, 0, 6);// draw object	
 	glFlush();
 	
 	glutSwapBuffers();
