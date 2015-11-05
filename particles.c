@@ -1,6 +1,8 @@
 // OpenGL 3 conversion 2013.
 //gcc particles.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
 
+// fixa lite sfärer täby :) 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -20,6 +22,8 @@
 #include "loadobj.h"
 #include "zpr.h"
 
+
+#define kBallSize 0.1
 
 GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
@@ -43,6 +47,36 @@ GLfloat vertices[] = {
         -1.0f, 1.0f, 0.0f
 };
 
+
+// En bolljävel
+//*******************************************************************************************
+typedef struct
+{
+  GLuint tex;
+  GLfloat mass;
+
+  vec3 X, P, L; // position, linear momentum, angular momentum
+  mat4 R; // Rotation
+
+  vec3 F, T; // accumulated force and torque
+
+//  mat4 J, Ji; We could have these but we can live without them for spheres.
+  vec3 omega; // Angular momentum
+  vec3 v; // Change in velocity
+
+} Ball;
+
+Model *sphere;
+Ball ball[1];
+
+void renderBall()
+{
+	DrawModel(sphere, shader, "in_Position", "in_Normal", NULL);
+	
+}
+
+//*******************************************************************************************
+
 // Drawing routine
 void Display()
 {
@@ -52,10 +86,18 @@ void Display()
 
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
 	// Draw the triangle
-	glBindVertexArray(vertexArrayObjID);// Select VAO
-	glDrawArrays(GL_TRIANGLES, 0, 6);// draw object
-	//glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_BYTE, NULL);	
+	//glBindVertexArray(vertexArrayObjID);// Select VAO
+	//glDrawArrays(GL_TRIANGLES, 0, 6);// draw object
+	
+	//glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_BYTE, NULL);
+	
+	// also draw a ball
+	renderBall();
+	ball[0].X = ScalarMult(ball[0].X, 2); 	
+
+	// Flush the buffers	
 	glFlush();
 	
 	glutSwapBuffers();
@@ -84,14 +126,25 @@ void Init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-shader = loadShaders("shader.vert", "shader.frag");
+	shader = loadShaders("shader.vert", "shader.frag");
+
+	//************************************************************
+	// Balls balls balls balls
+	sphere = LoadModelPlus("sphere.obj");
+	
+	ball[0].mass = 1.0;
+	ball[0].R = IdentityMatrix();
+	
+	ball[0].X = SetVector(1.0, 1.0, 1.0);
+	ball[0].P = SetVector(0, 0, 0);
+	
+	//************************************************************
 
 	printError("init shader");
 	
 	cam = SetVector(0, -1.5, 0.5);
 	point = SetVector(0, 0, 0);
 
-	
 
 	zprInit(&viewMatrix, cam, point);
 	
@@ -112,12 +165,13 @@ shader = loadShaders("shader.vert", "shader.frag");
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"),
 	3, GL_FLOAT, GL_FALSE, 0, 0); 
 	glEnableVertexAttribArray(glGetAttribLocation(shader, "in_Position"));
-
 }
+
+
 
 void Idle()
 {
-  glutPostRedisplay();
+	glutPostRedisplay();
 }
 
 int main(int argc, char *argv[])
@@ -127,13 +181,18 @@ int main(int argc, char *argv[])
 	glutInitWindowSize(600, 600);
 	glutInitContextVersion(3, 2);
 	glutCreateWindow("Struta Hårt");
-	
+
 	glutDisplayFunc(Display);
+
 	glutReshapeFunc(Reshape);
 	glutIdleFunc(Idle);
-
+	
 	Init();
 	
 	glutMainLoop();
 	exit(0);
 }
+
+
+
+
