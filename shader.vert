@@ -14,5 +14,5 @@ void main(void)
 
 	//exSurface = vec3(modelviewMatrix * vec4(in_Position, 1.0)); // Don't include projection here - we only want to go to view coordinates
 
-	gl_Position = modelviewMatrix * projectionMatrix * vec4(in_Position, 1.0); // This should include projection
+	gl_Position = projectionMatrix * modelviewMatrix * vec4(in_Position, 1.0); // This should include projection
 }
