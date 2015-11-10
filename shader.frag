@@ -1,10 +1,28 @@
 #version 150
 
 out vec4 outColor;
-//in vec3 exNormal; // Phong
-//in vec3 exSurface; // Phong (specular)
+in vec3 exNormal; // Phong
+in vec3 exSurface; // Phong (specular)
+
 
 void main(void)
 {	
-	outColor = vec4(1.0, 0.0, 0.0, 1.0);
+	
+	vec3 lightPos = vec3(0.0,10.0,2.0);
+	vec3 Lm = normalize(lightPos - exSurface);  //vector from light to vertex
+	
+	float diffuse = dot(Lm, exNormal);
+	diffuse = max(0.0, diffuse);
+
+	
+	vec3 Rm = 2*dot(Lm,normalize(exNormal))*normalize(exNormal)-Lm;  //Perfect reflection of light vector
+	vec3 Vm = normalize(-exSurface);  //View Vector		
+	float specular = dot(Rm, Vm);
+	if (specular > 0.0)
+		specular = 1.0 * pow(specular, 150.0);
+	specular = max(specular, 0.0);	
+	
+	float intensity =  0.7 * diffuse + 30.0 * specular; 
+	
+	outColor = vec4(intensity, intensity,intensity, 1.0); 
 }
