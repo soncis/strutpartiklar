@@ -118,8 +118,8 @@ void Display()
 
 	glBindVertexArray(vertexArrayObjID);
 	glBindVertexArray(normalArray);
-	//glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
-	DrawModel(model1, shader, "in_Position", "in_Normal", NULL);
+	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
+	//DrawModel(model1, shader, "in_Position", "in_Normal", NULL);
 	glFlush();
 	
 	glutSwapBuffers();
@@ -177,7 +177,7 @@ void Init()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Normal"),
 	3, GL_FLOAT, GL_FALSE, 0, 0); 
-	model1 = LoadModelPlus("stanford-bunny.obj");
+	//model1 = LoadModelPlus("stanford-bunny.obj");
 	
 	//cam = SetVector(0, 0, 5);
 	//point = SetVector(0, -1, 0);
