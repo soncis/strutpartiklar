@@ -39,138 +39,263 @@
 
 
 
-#define MAX_DROPS 50000
-#define GRAVITY -0.0005
+#define kBallSize 0.1
 
-#ifdef WIN32
-//to correct ASCI deviations in Microsoft VC++ 6.0
-
-#define M_PI (3.1415926535897932384626433832795)
-
-double drand48()
-{	return (rand()%10000)/10000.0; }
-
-//end of corrections
-#endif
+GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
 
-typedef struct {
-int alive;
-GLfloat xpos, ypos;
-GLfloat xdir, ydir;
-GLfloat mass;
-} Particle;
+GLuint* vertexArrayObjID, vertexBufferObjID, normalBuffer, normalArray, shader;
+Model *model1;
 
-Particle water[MAX_DROPS];
-int NumDrops;
+Point3D cam, point;
 
-void draw_waterfall(void)
+mat4 projectionMatrix;
+mat4 viewMatrix, vm2;
+const float XMIN = -0.5, XMAX = 0.5, YMIN = -0.5, YMAX=0.5;
+
+GLfloat vertices[] = {
+        // Left bottom triangle
+        -1.0f, 1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        // Right top triangle
+        1.0f, -1.0f, -1.0f,
+        1.0f, 1.0f, -1.0f,
+        -1.0f, 1.0f, -1.0f,
+	//back lower triangle
+	-1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+	//back upper triangle
+	-1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f
+};
+
+GLfloat normals[] = {
+        // Left bottom triangle
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        // Right top triangle
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+	//back lower triangle
+	0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+	//back upper triangle
+	0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+};
+
+
+// En bolljävel
+//*******************************************************************************************
+typedef struct
 {
-int i;
-glClear(GL_COLOR_BUFFER_BIT);
-glColor3f(0.0, 0.5, 1.0);
-glBegin(GL_POINTS);
-for ( i=0 ; i<NumDrops ; i++ )
-if (water[i].alive) {
-glVertex2f(water[i].xpos, water[i].ypos);
-}
-glEnd();
-glFlush();
-glutSwapBuffers();
-}
+  GLuint tex;
+  GLfloat mass;
 
-void time_step(void)
+  vec3 X, P, L; // position, linear momentum, angular momentum
+  mat4 R; // Rotation
+
+  vec3 F, T; // accumulated force and torque
+
+//  mat4 J, Ji; We could have these but we can live without them for spheres.
+  vec3 omega; // Angular momentum
+  vec3 v; // Change in velocity
+
+} Ball;
+
+Model *sphere;
+Ball ball[1];
+
+void renderBall()
 {
-int i;
-for ( i=0 ; i<NumDrops ; i++ ) {
-if (water[i].alive) {
-// set up an object to hit
-if (water[i].ypos + GRAVITY*water[i].mass < -0.75) {
-// bounce it off of the "floor"
-water[i].ydir = -water[i].ydir;
-} else {
-// let gravity do its thing
-water[i].ydir += GRAVITY * water[i].mass;
-}
-water[i].xpos += water[i].xdir;
-water[i].ypos += water[i].ydir;
-if (water[i].ypos < -1.0 || water[i].xpos > 1.0)
-water[i].alive = 0;
-}
-} 
+	DrawModel(sphere, shader, "in_Position", "in_Normal", NULL);
+	
 }
 
-void drop_generator(void)
+//*******************************************************************************************
+
+//http://www.3dgep.com/understanding-the-view-matrix/   
+/*void Look(vec3 eyepos, vec3 target, vec3 up){
+	vec3 zaxis = Normalize(VectorSub(eyepos, target));  //The z axis is pointing outwards
+	vec3 xaxis = Normalize(CrossProduct(up, zaxis));  //xaxis is pointing to the right
+	vec3 yaxis = CrossProduct(zaxis, xaxis);  //y axis is pointing up
+	
+	//mat4 orientation = SetMat4(xaxis.x,yaxis.x,zaxis.x,0.0f,xaxis.y,yaxis.y,zaxis.y,0.0f,xaxis.z,yaxis.z,zaxis.z,0.0f,0.0f,0.0f,0.0f,1.0f);
+  	mat4 ori;
+	ori.m = SetMat4(0.0f, 1.0f, 2.0f, 3.0f,4.0f, 5.0f, 6.0f, 7.0f,8.0f, 9.0f, 10.0f,  1.0f, 12.0f, 13.0f, 14.0f, 15.0f);
+}
+*/
+
+// Drawing routine
+void Display()
 {
-int i,newdrops = drand48()*60;
+	
+	// Clear framebuffer & zbuffer
+	glClearColor(0.1, 0.1, 0.3, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	// Draw the triangle
 
-if (NumDrops + newdrops > MAX_DROPS)
-newdrops = MAX_DROPS - NumDrops;
 
-for ( i=NumDrops ; i<NumDrops+newdrops ; i++ ) {
-water[i].alive = 1; 
-water[i].xpos = -0.8 + 0.01*drand48();
-water[i].ypos = 0.8 + 0.01*drand48();
-water[i].xdir = 0.0075 + 0.0025*drand48();
-water[i].ydir = 0.0;
-water[i].mass = 0.5 + 0.5*drand48();
+	//glBindVertexArray(vertexArrayObjID);// Select VAO
+	//glDrawArrays(GL_TRIANGLES, 0, 6);// draw object	
+
+	//glBindVertexArray(vertexArrayObjID);// Select VAO
+	//glDrawArrays(GL_TRIANGLES, 0, 6);// draw object
+	
+	//glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_BYTE, NULL);
+	
+	// also draw a ball
+		
+
+
+
+	//glBindVertexArray(vertexArrayObjID);// Select VAO
+	
+	glUseProgram(shader);
+	
+	vm2 = viewMatrix;
+	// Scale and place bunny since it is too small
+	vm2 = Mult(vm2, T(0, -8.5, 0));
+	vm2 = Mult(vm2, S(200,200,200));
+	
+	viewMatrix = lookAt(0,  0,  2,  0,  0,  -1,  0,  1,  0);
+
+	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
+	// Enable Z-buffering
+	glEnable(GL_DEPTH_TEST);
+	// Enable backface culling
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glBindVertexArray(vertexArrayObjID);
+	glBindVertexArray(normalArray);
+	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
+	//DrawModel(model1, shader, "in_Position", "in_Normal", NULL);
+	renderBall();
+	ball[0].X = ScalarMult(ball[0].X, 2); 
+	glFlush();
+	
+	glutSwapBuffers();
 }
-NumDrops += newdrops;
+
+void OnTimer(int value)
+{
+	glutPostRedisplay();
+	glutTimerFunc(5, &OnTimer, value);
 }
 
-void display(void)
+void Reshape(int h, int w)
 {
 
-drop_generator();
-draw_waterfall();
-time_step();
-
+	glViewport(0, 0, w, h);
+    	GLfloat ratio = (GLfloat) w / (GLfloat) h;
+   	projectionMatrix = perspective(90, ratio, 0.1, 1000);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 }
 
-void keyboard(unsigned char key, int x, int y)
+void Init()
 {
-switch (key) { 
-case 27: exit(0); break;
-}
+
+	// GL inits
+	glClearColor(0.1, 0.1, 0.3, 0);
+	glClearDepth(1.0);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	printError("GL inits");
+
+	shader = loadShaders("shader.vert", "shader.frag");
+
+
+	//************************************************************
+	// Balls balls balls balls
+	sphere = LoadModelPlus("sphere.obj");
+	
+	ball[0].mass = 1.0;
+	ball[0].R = IdentityMatrix();
+	
+	ball[0].X = SetVector(1.0, 1.0, 1.0);
+	ball[0].P = SetVector(0, 0, 0);
+	
+	//************************************************************
+
+	printError("init shader");
+	
+	cam = SetVector(0, -1.5, 0.5);
+	point = SetVector(0, 0, 0);
+
+
+	zprInit(&viewMatrix, cam, point);
+	
+	glUseProgram(shader);
+	projectionMatrix = perspective(90, 1.0, 0.1, 1000); // It would be silly to upload an uninitialized matrix
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
+	
+
+
+	printError("init shader");
+	
+
+	// Allocate and activate Vertex Array Object
+	glGenVertexArrays(1, &vertexArrayObjID);
+	glBindVertexArray(vertexArrayObjID);
+	//Normal buffer
+	glGenVertexArrays(1, &normalArray);
+	glBindVertexArray(normalArray);	
+
+	// Allocate Vertex Buffer Objects	
+	glGenBuffers(1, &vertexBufferObjID);
+	glGenBuffers(1, &normalBuffer);
+	// VBO for vertex data
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);							//OBS DETTA SKA ANVÄNDAS. ANNARS BLIR DET SÄMST!!!
+	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"),
+	3, GL_FLOAT, GL_FALSE, 0, 0); 
+
+	// VBO for vertex data
+	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(glGetAttribLocation(shader, "in_Normal"),
+	3, GL_FLOAT, GL_FALSE, 0, 0); 
+
 }
 
-void reshape (int w, int h)
+
+
+void Idle()
 {
-glViewport(0, 0, (GLsizei) w, (GLsizei) h);
-glMatrixMode(GL_PROJECTION); 
-glLoadIdentity();
-if (w <= h)
-glOrtho(-1.0, 1.0,
--1.0*(GLfloat)h/(GLfloat)w, 1.0*(GLfloat)h/(GLfloat)w,
--1.0, 1.0);
-else
-glOrtho(-1.0*(GLfloat)w/(GLfloat)h, 1.0*(GLfloat)w/(GLfloat)h,
--1.0, 1.0,
--1.0, 1.0);
-glMatrixMode(GL_MODELVIEW);
+	glutPostRedisplay();
 }
 
-void idle(void)
+int main(int argc, char *argv[])
 {
-glutPostRedisplay();
+	glutInit(&argc, argv);
+	
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitWindowSize(600, 600);
+	
+	glutInitContextVersion(3, 2);
+	glutCreateWindow("Struta Hårt");
+
+	glutDisplayFunc(Display);
+
+	glutReshapeFunc(Reshape);
+	glutIdleFunc(Idle);
+	
+	Init();
+	
+	glutMainLoop();
+	exit(0);
 }
 
-int main(int argc, char** argv)
-{
-glutInit(&argc, argv);
-glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB);
-glutInitWindowSize (700, 700);
-glutInitWindowPosition(0, 0);
-glutCreateWindow ("Waterfall");
 
-glClearColor (0.0, 0.0, 0.0, 0.0);
-glPointSize(2.0);
-
-glutDisplayFunc(display);
-glutReshapeFunc(reshape);
-glutIdleFunc(idle);
-glutKeyboardFunc(keyboard);
-glutMainLoop();
-
-return 1; 
-}
