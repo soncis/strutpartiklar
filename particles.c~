@@ -1,7 +1,7 @@
 // OpenGL 3 conversion 2013.
 //gcc particles.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
 
-// fixa lite sfärer täby :) 
+// Fixa partiklar
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,6 +25,9 @@
 
 #define kBallSize 0.1
 
+// Max antal partiklar
+#define MaxParticles 3
+
 GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
 Point3D cam, point;
@@ -47,9 +50,26 @@ GLfloat vertices[] = {
         -1.0f, 1.0f, 0.0f
 };
 
+// Tror detta är ok... 
+
+// Partikelskit
+//*******************************************************************************************
+// bilboard_vertex_buffer
+// Buffer for the vertices of the mesh.
+GLuint billboard_vertex_buffer;
+
+// The VBO containing the positions and sizes of the particles
+GLuint particles_position_buffer;
+
+
+// The VBO containing the colors of the particles
+GLuint particles_color_buffer;
+
 
 // En bolljävel
 //*******************************************************************************************
+mat4 transMatrix; 
+
 typedef struct
 {
   GLuint tex;
@@ -71,8 +91,22 @@ Ball ball[1];
 
 void renderBall()
 {
+	// position
+	//transMatrix = T(ball[0].X.x, ball[0].y, ball[0].X.z);
+	//transMatrix = ScalarMult(transMatrix, 2);  
 	DrawModel(sphere, shader, "in_Position", "in_Normal", NULL);
 	
+}
+
+void updateWorld()
+{
+	// Gör inte ett jävla skit
+	ball[0].X = ScalarMult(ball[0].X, 2);
+
+	// Gör inte ett jävla skit
+	ball[0].X.x += 0.5;
+	ball[0].X.y += 0.5;
+	ball[0].X.z += 0.5; 	
 }
 
 //*******************************************************************************************
@@ -80,6 +114,9 @@ void renderBall()
 // Drawing routine
 void Display()
 {
+	// sKa uppdatera bolljävlarna
+	updateWorld();
+
 	// Clear framebuffer & zbuffer
 	glClearColor(0.1, 0.1, 0.3, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
@@ -93,9 +130,10 @@ void Display()
 	
 	//glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_BYTE, NULL);
 	
-	// also draw a ball
-	renderBall();
-	ball[0].X = VectorAdd(ball[0].X, 1); 	
+	// also draw a ball		
+
+	//renderBall();
+	
 
 	// Flush the buffers	
 	glFlush();
@@ -131,13 +169,9 @@ void Init()
 	//************************************************************
 	// Balls balls balls balls
 	sphere = LoadModelPlus("sphere.obj");
-	
-	ball[0].mass = 1.0;
-	ball[0].R = IdentityMatrix();
-	
-	ball[0].X = SetVector(1.0, 1.0, 1.0);
-	ball[0].P = SetVector(0, 0, 0);
-	
+
+	// gör inte ett jävla skit
+	ball[0].X = SetVector(0, 0, 0);
 	//************************************************************
 
 	printError("init shader");
@@ -167,7 +201,74 @@ void Init()
 	glEnableVertexAttribArray(glGetAttribLocation(shader, "in_Position"));
 }
 
+// Partikeljävel
+//*******************************************************************************************
 
+void InitParticles()
+{
+	// The VBO containing the 4 vertices of the particles.
+	// Thanks to instancing, they will be shared by all particles.
+	static const GLfloat g_vertex_buffer_data[] = 
+	{
+
+		-0.5f, -0.5f, 0.0f,
+
+		0.5f, -0.5f, 0.0f,
+
+		-0.5f, 0.5f, 0.0f,
+
+		0.5f, 0.5f, 0.0f,
+
+	};
+
+	// Vio behöver 3 buffers 
+	// Binda billboard_vertex_buffer
+	glGenBuffers(1, &billboard_vertex_buffer);
+
+	glBindBuffer(GL_ARRAY_BUFFER, billboard_vertex_buffer);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+	// Binda particles_position_buffer
+	glGenBuffers(1, &particles_position_buffer);
+
+	glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+
+	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
+	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
+
+	// Binda particles_color_buffer
+	glGenBuffers(1, &particles_color_buffer);
+
+	glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+
+	// Initialize with empty (NULL) buffer : it will be updated later, each frame.
+	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW);
+
+
+}
+
+// Update the buffers that OpenGL uses for rendering.
+// There are much more sophisticated means to stream data from the CPU to the GPU,
+// but this is outside the scope of this tutorial.
+// http://www.opengl.org/wiki/Buffer_Object_Streaming
+void UpdateParticleBuffers()
+{
+	glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
+	
+	// Buffer orphaning, a common way to improve streaming perf. See above link for details.
+	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); 
+	
+	glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLfloat) * 4, g_particule_position_size_data);
+
+	glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+
+	// Buffer orphaning, a common way to improve streaming perf. See above link for details.
+	glBufferData(GL_ARRAY_BUFFER, MaxParticles * 4 * sizeof(GLubyte), NULL, GL_STREAM_DRAW); 
+
+	glBufferSubData(GL_ARRAY_BUFFER, 0, ParticlesCount * sizeof(GLubyte) * 4, g_particule_color_data);
+
+}
 
 void Idle()
 {
