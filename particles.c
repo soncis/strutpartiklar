@@ -96,17 +96,17 @@ GLfloat normals[] = {
 //*******************************************************************************************
 typedef struct
 {
-  GLuint tex;
-  GLfloat mass;
+	GLuint tex;
+	GLfloat mass;
 
-  vec3 X, P, L; // position, linear momentum, angular momentum
-  mat4 R; // Rotation
+	vec3 X, P, L; // position, linear momentum, angular momentum
+	mat4 R; // Rotation
 
-  vec3 F, T; // accumulated force and torque
+	vec3 F, T; // accumulated force and torque
 
-//  mat4 J, Ji; We could have these but we can live without them for spheres.
-  vec3 omega; // Angular momentum
-  vec3 v; // Change in velocity
+	//  mat4 J, Ji; We could have these but we can live without them for spheres.
+	vec3 omega; // Angular momentum
+	vec3 v; // Change in velocity
 
 } Ball;
 
@@ -120,6 +120,8 @@ void renderBall()
 }
 
 //*******************************************************************************************
+
+
 
 //http://www.3dgep.com/understanding-the-view-matrix/   
 /*void Look(vec3 eyepos, vec3 target, vec3 up){
@@ -179,8 +181,10 @@ void Display()
 	glBindVertexArray(normalArray);
 	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
 	//DrawModel(model1, shader, "in_Position", "in_Normal", NULL);
+	
 	renderBall();
 	ball[0].X = ScalarMult(ball[0].X, 2); 
+
 	glFlush();
 	
 	glutSwapBuffers();
