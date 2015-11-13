@@ -136,18 +136,9 @@ GLuint tetraIndicies[] =
 //*******************************************************************************************
 typedef struct
 {
-	// ett test
+	// Tror inte denna behövs..
 	GLuint* tetraArr; 
-
-	// Verticies
-	GLfloat *verts;
 	
-	// Normals
-	GLfloat *norms;
-
-	// Indicies
-	GLuint *indicies; 
-
 	// Tetraederns massa
 	GLfloat mass;
 
@@ -171,7 +162,6 @@ Tetra tetras[5];
 void drawTetra(int nr)
 {
 	
-	
 	// Använd tempmatrisen för förflyttning
 	tmpMatrix = T(tetras[nr].pos.x, tetras[nr].pos.y, tetras[nr].pos.z); // position
 	//tmpMatrix = T(0.5, 0.5, 0.5);	
@@ -184,6 +174,10 @@ void drawTetra(int nr)
 	//glBindVertexArray(tetraNormalArray);
 	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
 }
+
+// Kommer förmodligen behövas sen för att uppdatera positionerna rätt 
+void uppdatePos()
+{}
 
 //*******************************************************************************************
 
@@ -393,17 +387,6 @@ void Init()
 	
 		tetras[i].mass = 1.0;
 		tetras[i].pos = SetVector(-0.1 + (float)i, 0.1 + (float)i, 1.5 - (float)i);			
-		
-
-		// Set verticies, normals och indicies
-		tetras[i].verts = tetraVertices;
-
-		// Normals
-		tetras[i].norms = tetraNormals;
-
-		// Indicies
-		tetras[i].indicies = tetraIndicies; 
-
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies)/*12*sizeof(GLuint)*/, tetraIndicies, GL_STATIC_DRAW);
