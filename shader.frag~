@@ -1,5 +1,20 @@
-#version 150
+#version 330 core
 
+<<<<<<< HEAD
+// Interpolated values from the vertex shaders
+in vec2 UV;
+in vec4 particlecolor;
+
+// Ouput data
+out vec4 color;
+
+uniform sampler2D myTextureSampler;
+
+void main(void){
+	// Output color = color of the texture at the specified UV
+	color = texture( myTextureSampler, UV ) * particlecolor;
+
+=======
 out vec4 outColor;
 in vec3 exNormal; // Phong
 in vec3 exSurface; // Phong (specular)
@@ -25,4 +40,5 @@ void main(void)
 	float intensity =  0.7 * diffuse + 30.0 * specular; 
 	
 	outColor = vec4(intensity, intensity,intensity, 1.0); 
+>>>>>>> 2ce1cbe056434e636e0341dae201334c3ff85fad
 }

@@ -16,3 +16,4 @@ void main(void)
 
 	gl_Position = projectionMatrix * modelviewMatrix * vec4(in_Position, 1.0); // This should include projection
 }
+
