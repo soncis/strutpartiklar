@@ -126,6 +126,8 @@ GLuint tetraIndicies[] = {
 // Antalet tetraedrar
 #define NO_OBJECTS 7
 
+#define gravity 9.82
+
 // Tetra struts
 //*******************************************************************************************
 typedef struct
@@ -171,8 +173,9 @@ void drawTetra(int nr)
 }
 
 
-//Education is an admirable thing, but it is well to remember from time to time that nothing that is worth knowing can be taught.
-
+//Education is an admirable thing, but it is well to remember from time to time 
+//that nothing that is worth knowing can be taught.
+// Oscar Wilde
 
 // Uppdatera "fysiken" eller tetraweissarnas positioner
 void uppdatePos()
@@ -180,8 +183,12 @@ void uppdatePos()
 	int i;
 	for(i = 0; i < NO_OBJECTS; i++)
 	{
-		tetras[i].pos.y -= 0.01; 
-	}
+		// Dålig konstant fall
+		//tetras[i].pos.y -= gravity * 0.001; 
+		
+		// mer korrekt än förra men fel och går sjukt snabbt. 
+		tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass; 	
+	}	
 
 }
 
