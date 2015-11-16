@@ -18,12 +18,17 @@ void main(void){
 out vec4 outColor;
 in vec3 exNormal; // Phong
 in vec3 exSurface; // Phong (specular)
+in vec3 lightPos;
 
 
 void main(void)
 {	
 	
+<<<<<<< HEAD
 	vec3 lightPos = vec3(0.0,0.0,2.0);
+=======
+	//vec3 lightPos = vec3(0.0,20,20.0);
+>>>>>>> Strut
 	vec3 Lm = normalize(lightPos - exSurface);  //vector from light to vertex
 	
 	float diffuse = dot(Lm, exNormal);
