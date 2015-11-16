@@ -136,7 +136,7 @@ GLuint tetraIndicies[] =
 //*******************************************************************************************
 typedef struct
 {
-	// ett test
+	// Tror inte denna behövs..
 	GLuint* tetraArr; 
 	
 	// Tetraederns massa
