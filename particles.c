@@ -40,8 +40,8 @@
 
 
 
-#define kBallSize 0.9
-#define boundRad 0.1
+#define kBallSize 0.3
+#define boundRad 0.3
 
 GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
@@ -56,7 +56,7 @@ Point3D cam, point;
 mat4 projectionMatrix;
 mat4 viewMatrix, vm2;
 mat4 tmpMatrix; 
-const float XMIN = -0.5, XMAX = 0.5, YMIN = -0.5, YMAX=0.5;
+const float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
 
 //Plane strushish
 GLfloat vertices[] = {
@@ -99,7 +99,6 @@ GLfloat normals[] =
 };
 
 
-
 //regular (1,1,1), (1,−1,−1), (−1,1,−1), (−1,−1,1)
 GLfloat tetraVertices[] = {
         -0.1f, -0.1f, 0.1f,
@@ -138,8 +137,8 @@ typedef struct
 	// Positioner
 	 vec3 pos; 
 
-	// Riktning		
-	vec3 direction;
+	// Hastigheten		
+	vec3 vel;
 
 } Tetra;
 
@@ -168,6 +167,32 @@ void drawTetra(int nr)
 // Kommer förmodligen behövas sen för att uppdatera positionerna rätt 
 void uppdatePos()
 {}
+//Plane given by: ax + by + cz = d
+	//x = ad/(a² + b² + c²)
+	//y = bd/(a² + b² + c²)
+	//z = cd/(a² + b² + c²)
+	//x = X - X0, y = Y - Y0, z = Z - Z0, and d = D - aX0 - bY0 - cZ0, to obtain ax + by + cz = d
+void calcIntersection(int nr){
+	vec3 normal;
+	if(tetras[nr].pos.x >= XMAX)
+		normal = SetVector(-1.0f,0.0f,0.0f);
+		
+	if(tetras[nr].pos.x <= XMIN)
+		normal = SetVector(1.0f,0.0f,0.0f);
+
+	if(tetras[nr].pos.x >= YMAX)
+		normal = SetVector(0.0f,-1.0f,0.0f);
+	
+	if(tetras[nr].pos.x <= YMIN)
+		normal = SetVector(0.0f,1.0f,0.0f);
+	
+	if(tetras[nr].pos.x >= ZMAX)
+		normal = SetVector(0.0f,0.0f,-1.0f);
+	if(tetras[nr].pos.x <= ZMIN)
+		normal = SetVector(0.0f,0.0f,1.0f);
+	
+	tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
+}
 
 GLfloat tetraNormals[] = {
 	//front        
@@ -214,21 +239,6 @@ void Display()
 	// Clear framebuffer & zbuffer
 	glClearColor(0.1, 0.1, 0.3, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// Draw the triangle
-
-
-	//glBindVertexArray(vertexArrayObjID);// Select VAO
-	//glDrawArrays(GL_TRIANGLES, 0, 6);// draw object	
-
-	//glBindVertexArray(vertexArrayObjID);// Select VAO
-	//glDrawArrays(GL_TRIANGLES, 0, 6);// draw object
-	
-	//glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_BYTE, NULL);
-	
-	// also draw a ball
-		
-
-	//glBindVertexArray(vertexArrayObjID);// Select VAO
 
 	// Enable Z-buffering
 	glEnable(GL_DEPTH_TEST);
@@ -243,7 +253,7 @@ void Display()
 	vm2 = Mult(vm2, T(0, -8.5, 0));
 	vm2 = Mult(vm2, S(200,200,200));
 	
-	viewMatrix = lookAt(0,  0,  2,  0,  0,  0,  0,  1,  0);
+	viewMatrix = lookAt(0,  0,  1,  0,  0,  0,  0,  1,  0);
 	
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
 	
@@ -253,8 +263,8 @@ void Display()
 
 	// Rita ut planet	
 	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
-
-
+	
+	
 	int i; 
 	// Rita ut tetraeder
 	for(i = 0; i < NO_OBJECTS; i++) 
@@ -390,7 +400,7 @@ void Init()
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Normal"), 3, GL_FLOAT,
 	GL_FALSE, 0,0); 
 	
-
+	
 	int i; 
 	// Initiera variabler för flera tetror
 	for (i = 0; i < NO_OBJECTS; i++)
@@ -404,9 +414,9 @@ void Init()
 		tetras[i].pos = SetVector(-0.1 + (float)i, 0.1 + (float)i, 1.5 - (float)i);			
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies)/*12*sizeof(GLuint)*/, tetraIndicies, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 	}
-
+	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 	
