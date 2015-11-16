@@ -59,7 +59,8 @@ mat4 tmpMatrix;
 const float XMIN = -0.5, XMAX = 0.5, YMIN = -0.5, YMAX=0.5;
 
 //Plane strushish
-GLfloat vertices[] = {
+GLfloat vertices[] = 
+{
         // Left bottom triangle
         -1.0f, 1.0f, -1.0f,
         -1.0f, -1.0f, -1.0f,
@@ -101,7 +102,8 @@ GLfloat normals[] =
 
 
 //regular (1,1,1), (1,−1,−1), (−1,1,−1), (−1,−1,1)
-GLfloat tetraVertices[] = {
+GLfloat tetraVertices[] = 
+{
         -0.1f, -0.1f, 0.1f,
         0.1f, 0.1f, 0.1f,
         -0.1f, 0.1f, -0.1f,
@@ -120,7 +122,9 @@ GLuint tetraIndicies[] = {
 	//back
 	1,3,2
 };
-#define NO_OBJECTS 3
+
+// Antalet tetraedrar
+#define NO_OBJECTS 7
 
 // Tetra struts
 //*******************************************************************************************
@@ -144,7 +148,8 @@ typedef struct
 } Tetra;
 
 // Array med alla tetras som ska ritas upp 
-Tetra tetras[5];
+// Glöm inte ändra denna med
+Tetra tetras[7];
 
 
 
@@ -165,11 +170,24 @@ void drawTetra(int nr)
 	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
 }
 
-// Kommer förmodligen behövas sen för att uppdatera positionerna rätt 
-void uppdatePos()
-{}
 
-GLfloat tetraNormals[] = {
+//Education is an admirable thing, but it is well to remember from time to time 
+//that nothing that is worth knowing can be taught.
+// Oscar Wilde
+
+// Uppdatera "fysiken" eller tetraweissarnas positioner
+void uppdatePos()
+{
+	int i;
+	for(i = 0; i < NO_OBJECTS; i++)
+	{
+		tetras[i].pos.y -= 0.01; 
+	}
+
+}
+
+GLfloat tetraNormals[] = 
+{
 	//front        
 	-0.58f, 0.58f, 0.58f,
 	//right        
@@ -207,10 +225,17 @@ void renderBall()
 	
 }
 
+
+//Some cause happiness wherever they go; others whenever they go.
+// Oscar Wilde 
+
+
 // Drawing routine
 void Display()
 {
-	
+	// Uppdatera tetrornas pos och annat smött å gött 
+	uppdatePos();
+
 	// Clear framebuffer & zbuffer
 	glClearColor(0.1, 0.1, 0.3, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -261,6 +286,7 @@ void Display()
 	{
 		drawTetra(i); 
 	}
+
 	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
 	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
@@ -401,7 +427,7 @@ void Init()
 		//glBindVertexArray(tetras[i].tetraArr);
 	
 		tetras[i].mass = 1.0;
-		tetras[i].pos = SetVector(-0.1 + (float)i, 0.1 + (float)i, 1.5 - (float)i);			
+		tetras[i].pos = SetVector(-1.0 + 0.5 * (float)i, 0.5, 0.5);			
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies)/*12*sizeof(GLuint)*/, tetraIndicies, GL_STATIC_DRAW);
