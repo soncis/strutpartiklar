@@ -126,6 +126,8 @@ GLuint tetraIndicies[] = {
 // Antalet tetraedrar
 #define NO_OBJECTS 7
 
+#define gravity 9.82
+
 // Tetra struts
 //*******************************************************************************************
 typedef struct
@@ -181,8 +183,12 @@ void uppdatePos()
 	int i;
 	for(i = 0; i < NO_OBJECTS; i++)
 	{
-		tetras[i].pos.y -= 0.01; 
-	}
+		// Dålig konstant fall
+		//tetras[i].pos.y -= gravity * 0.001; 
+		
+		// mer korrekt än förra men fel och går sjukt snabbt. 
+		tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass; 	
+	}	
 
 }
 
@@ -426,7 +432,7 @@ void Init()
 		//glGenVertexArrays(1, &tetras[i].tetraArr);
 		//glBindVertexArray(tetras[i].tetraArr);
 	
-		tetras[i].mass = 1.0;
+		tetras[i].mass = 0.00001;;
 		tetras[i].pos = SetVector(-1.0 + 0.5 * (float)i, 0.5, 0.5);			
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
