@@ -1,0 +1,19 @@
+// Smarta git kommandon!
+// kanske inte funkar än vi får testa oss fram :p 
+
+// Du har skrivit massa bra kod i din LOKALA branch du vill pusha till master
+
+git commit -am "kommentar"
+git checkout master
+git pull origin master
+
+// Fixa eventuella conflicts 
+// Testa att koden funkar!
+
+
+
+git merge din lokala branch
+
+git commit -am "struta hårt"
+
+git push origin master

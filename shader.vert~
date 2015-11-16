@@ -1,9 +1,20 @@
 #version 330 core
 
+<<<<<<< HEAD
 // Input vertex data, different for all executions of this shader.
 layout(location = 0) in vec3 squareVertices;
 layout(location = 1) in vec4 xyzs; // Position of the center of the particule and size of the square
 layout(location = 2) in vec4 color; // Position of the center of the particule and size of the square
+=======
+in  vec3 in_Position;
+in  vec3 in_Normal;
+out vec3 exNormal; // Phong
+out vec3 exSurface; // Phong (specular)
+<<<<<<< HEAD
+>>>>>>> 2ce1cbe056434e636e0341dae201334c3ff85fad
+=======
+out vec3 lightPos;
+>>>>>>> Strut
 
 // Output data ; will be interpolated for each fragment.
 out vec2 UV;
@@ -16,6 +27,7 @@ uniform mat4 VP; // Model-View-Projection matrix, but without the Model (the pos
 
 void main(void)
 {
+<<<<<<< HEAD
 	float particleSize = xyzs.w; // because we encoded it this way.
 	vec3 particleCenter_wordspace = xyzs.xyz;
 	
@@ -30,5 +42,16 @@ void main(void)
 	// UV of the vertex. No special space for this one.
 	UV = squareVertices.xy + vec2(0.5, 0.5);
 	particlecolor = color;
+=======
+	exNormal = inverse(transpose(mat3(modelviewMatrix))) * in_Normal; // Phong, "fake" normal transformation
+
+	exSurface = vec3(modelviewMatrix * vec4(in_Position, 1.0)); // Don't include projection here - we only want to go to view coordinates
+
+	gl_Position = projectionMatrix * modelviewMatrix * vec4(in_Position, 1.0); // This should include projection
+<<<<<<< HEAD
+>>>>>>> 2ce1cbe056434e636e0341dae201334c3ff85fad
+=======
+	lightPos = vec3(modelviewMatrix * vec4(0.0, 2 , 2, 1.0));
+>>>>>>> Strut
 }
 

@@ -131,7 +131,7 @@ GLuint tetraIndicies[] =
 };
 
 // Antal tetras på skärmen
-#define NO_OBJECTS 6
+#define NO_OBJECTS 8
 
 // Tetra struts
 //*******************************************************************************************
