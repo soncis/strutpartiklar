@@ -2,7 +2,7 @@
 //gcc particles.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
 
 
-//sätt gravitation
+// Kolla om man kan ladda in lite fler tetraedrar från array typ.. ?  
 
 
 #include <stdlib.h>
@@ -40,14 +40,16 @@
 
 
 
-#define kBallSize 0.1
+#define kBallSize 0.9
+#define boundRad 0.1
 
 GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
 
 GLuint* vertexArrayObjID, vertexBufferObjID, normalBuffer, normalArray, shader;
 GLuint* tetraArray, tetraNormalArray, tetraVertexBuffer, tetraNormalBuffer, tetraIndexBuffer;
-Model *model1;
+
+
 
 Point3D cam, point;
 
@@ -57,7 +59,8 @@ mat4 tmpMatrix;
 const float XMIN = -0.5, XMAX = 0.5, YMIN = -0.5, YMAX=0.5;
 
 //Plane strushish
-GLfloat vertices[] = {
+GLfloat vertices[] = 
+{
         // Left bottom triangle
         -1.0f, 1.0f, -1.0f,
         -1.0f, -1.0f, -1.0f,
@@ -96,42 +99,32 @@ GLfloat normals[] =
         0.0f, 1.0f, 0.0f,
 };
 
-// Kommentera
+
+
+//regular (1,1,1), (1,−1,−1), (−1,1,−1), (−1,−1,1)
 GLfloat tetraVertices[] = 
 {
         -0.1f, -0.1f, 0.1f,
-        0.1f, -0.1f, 0.1f,
-        0.0f, 0.1f, 0.0f,
-	0.0f, -0.1f, -0.1f
+        0.1f, 0.1f, 0.1f,
+        -0.1f, 0.1f, -0.1f,
+	0.1f, -0.1f, -0.1f
         
 };
 
-GLfloat tetraNormals[] = 
-{
-	//front        
-	0.0f, 0.45f, 0.89f,
-	//bottom        
-	0.0f, -1.0f, 0.0f,
-	//left
-        -0.87f, 0.22f, -0.44f,
-	//right
-	0.87f, 0.22f, -0.44f        
-};
 //Indices for tetrahedron
-GLuint tetraIndicies[] = 
-{
+GLuint tetraIndicies[] = {
 	//front	
 	0,1,2, 
-	//bottom
-	0,1,3, 
+	//right
+	3,1,0, 
 	//left
 	0,2,3,
-	//right
+	//back
 	1,3,2
 };
 
-// Antal tetras på skärmen
-#define NO_OBJECTS 8
+// Antalet tetraedrar
+#define NO_OBJECTS 7
 
 // Tetra struts
 //*******************************************************************************************
@@ -155,7 +148,8 @@ typedef struct
 } Tetra;
 
 // Array med alla tetras som ska ritas upp 
-Tetra tetras[5];
+// Glöm inte ändra denna med
+Tetra tetras[7];
 
 
 
@@ -176,11 +170,33 @@ void drawTetra(int nr)
 	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
 }
 
-// Kommer förmodligen behövas sen för att uppdatera positionerna rätt 
-void uppdatePos()
-{}
 
-//*******************************************************************************************
+//Education is an admirable thing, but it is well to remember from time to time 
+//that nothing that is worth knowing can be taught.
+// Oscar Wilde
+
+// Uppdatera "fysiken" eller tetraweissarnas positioner
+void uppdatePos()
+{
+	int i;
+	for(i = 0; i < NO_OBJECTS; i++)
+	{
+		tetras[i].pos.y -= 0.01; 
+	}
+
+}
+
+GLfloat tetraNormals[] = 
+{
+	//front        
+	-0.58f, 0.58f, 0.58f,
+	//right        
+	0.58f, -0.58f, 0.58f,
+	//left
+        -0.58f, -0.58f, -0.58f,
+	//back
+	0.58f, 0.58f, -0.58f        
+};
 
 // En bolljävel
 //*******************************************************************************************
@@ -209,17 +225,20 @@ void renderBall()
 	
 }
 
-//*******************************************************************************************
+
+//Some cause happiness wherever they go; others whenever they go.
+// Oscar Wilde 
 
 
 // Drawing routine
 void Display()
 {
-	
+	// Uppdatera tetrornas pos och annat smött å gött 
+	uppdatePos();
+
 	// Clear framebuffer & zbuffer
 	glClearColor(0.1, 0.1, 0.3, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
 	// Draw the triangle
 
 
@@ -235,7 +254,13 @@ void Display()
 		
 
 	//glBindVertexArray(vertexArrayObjID);// Select VAO
-	
+
+	// Enable Z-buffering
+	glEnable(GL_DEPTH_TEST);
+	// Enable backface culling
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
 	glUseProgram(shader);
 	
 	vm2 = viewMatrix;
@@ -243,14 +268,10 @@ void Display()
 	vm2 = Mult(vm2, T(0, -8.5, 0));
 	vm2 = Mult(vm2, S(200,200,200));
 	
-	viewMatrix = lookAt(0,  0,  2,  0,  0,  -1,  0,  1,  0);
-
+	viewMatrix = lookAt(0,  0,  2,  0,  0,  0,  0,  1,  0);
+	
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
-	// Enable Z-buffering
-	glEnable(GL_DEPTH_TEST);
-	// Enable backface culling
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	
 	
 	glBindVertexArray(vertexArrayObjID);
 	glBindVertexArray(normalArray);
@@ -264,7 +285,22 @@ void Display()
 	for(i = 0; i < NO_OBJECTS; i++) 
 	{
 		drawTetra(i); 
-	}	
+	}
+
+	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
+	
+	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
+	mat4 rot = ArbRotate(SetVector(1.0, 0.0, 0.0), ang);
+	viewMatrix = Mult(viewMatrix, rot);
+
+	glBindVertexArray(tetraArray);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
+	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+
+	//mat4 s = S(2.5, 2.5, 2.5);
+	
+	//glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
+	//renderBall();
 
 	glFlush();
 	
@@ -315,7 +351,7 @@ void Init()
 	point = SetVector(0, 0, 0);
 
 
-	zprInit(&viewMatrix, cam, point);
+	//zprInit(&viewMatrix, cam, point);
 	
 	glUseProgram(shader);
 	projectionMatrix = perspective(90, 1.0, 0.1, 1000); // It would be silly to upload an uninitialized matrix
@@ -357,7 +393,10 @@ void Init()
 
 	glGenVertexArrays(1, &tetraArray);
 	glBindVertexArray(tetraArray);
-	
+
+	glGenVertexArrays(1, &tetraArray);
+	glBindVertexArray(tetraArray);
+
 
 	glGenBuffers(1, &tetraVertexBuffer);
 	glGenBuffers(1, &tetraIndexBuffer);
@@ -365,18 +404,19 @@ void Init()
 
 	// VBO for vertex data
 	glBindBuffer(GL_ARRAY_BUFFER, tetraVertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(tetraVertices)/*4*3*sizeof(GLfloat)*/, tetraVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tetraVertices), tetraVertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);	
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"), 3, GL_FLOAT,
 	GL_FALSE, 0, 0); 
 
 	// VBO for vertex data
 	glBindBuffer(GL_ARRAY_BUFFER, tetraNormalBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(tetraNormals)/*4*3*sizeof(GLfloat)*/, tetraNormals, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tetraNormals), tetraNormals, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Normal"), 3, GL_FLOAT,
 	GL_FALSE, 0,0); 
 	
+
 	int i; 
 	// Initiera variabler för flera tetror
 	for (i = 0; i < NO_OBJECTS; i++)
@@ -387,11 +427,14 @@ void Init()
 		//glBindVertexArray(tetras[i].tetraArr);
 	
 		tetras[i].mass = 1.0;
-		tetras[i].pos = SetVector(-0.1 + (float)i, 0.1 + (float)i, 1.5 - (float)i);			
+		tetras[i].pos = SetVector(-1.0 + 0.5 * (float)i, 0.5, 0.5);			
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies)/*12*sizeof(GLuint)*/, tetraIndicies, GL_STATIC_DRAW);
 	}
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 	
 }
 
