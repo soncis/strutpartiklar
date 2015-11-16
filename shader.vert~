@@ -4,6 +4,7 @@ in  vec3 in_Position;
 in  vec3 in_Normal;
 out vec3 exNormal; // Phong
 out vec3 exSurface; // Phong (specular)
+out vec3 lightPos;
 
 uniform mat4 modelviewMatrix;
 uniform mat4 projectionMatrix;
@@ -15,4 +16,5 @@ void main(void)
 	exSurface = vec3(modelviewMatrix * vec4(in_Position, 1.0)); // Don't include projection here - we only want to go to view coordinates
 
 	gl_Position = projectionMatrix * modelviewMatrix * vec4(in_Position, 1.0); // This should include projection
+	lightPos = vec3(modelviewMatrix * vec4(0.0, 2 , 2, 1.0));
 }
