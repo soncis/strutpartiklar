@@ -152,10 +152,47 @@ typedef struct
 // Glöm inte ändra denna med
 Tetra tetras[7];
 
+//Tetra testTetra;
 
+//Plane given by: ax + by + cz = d
+	//x = ad/(a² + b² + c²)
+	//y = bd/(a² + b² + c²)
+	//z = cd/(a² + b² + c²)
+	//x = X - X0, y = Y - Y0, z = Z - Z0, and d = D - aX0 - bY0 - cZ0, to obtain ax + by + cz = d
+void calcBounce(int nr){
+	vec3 normal = SetVector(0,0,0);
+	if(tetras[nr].pos.x >= XMAX){
+		normal = SetVector(-1.0f,0.0f,0.0f);
+		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
+	}
+		
+	if(tetras[nr].pos.x <= XMIN){
+		normal = SetVector(1.0f,0.0f,0.0f);
+		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
+	}
+
+	if(tetras[nr].pos.y >= YMAX){
+		normal = SetVector(0.0f,-1.0f,0.0f);
+		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
+	}
+	
+	if(tetras[nr].pos.y <= YMIN){
+		normal = SetVector(0.0f,1.0f,0.0f);
+		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
+	}
+	
+	if(tetras[nr].pos.z >= ZMAX){
+		normal = SetVector(0.0f,0.0f,-1.0f);
+		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
+	}
+	if(tetras[nr].pos.z <= ZMIN){
+		normal = SetVector(0.0f,0.0f,1.0f);
+		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
+	}
+}
 
 // Kolla renderball för position
-void drawTetra(int nr)
+/*void drawTetra(int nr)
 {
 	
 	// Använd tempmatrisen för förflyttning
@@ -166,18 +203,30 @@ void drawTetra(int nr)
     	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, tmpMatrix.m);
 
 	// Rita ut tetraeder? 
-	glBindVertexArray(tetras[nr].tetraArr);
+	glBindVertexArray(tetraArray);	
+	//glBindVertexArray(tetras[nr].tetraArr);
 	//glBindVertexArray(tetraNormalArray);
 	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
-}
+}*/
 
+void drawTetra(int nr)
+{
+	calcBounce(nr);
+	tetras[nr].pos = VectorAdd(tetras[nr].pos, tetras[nr].vel);
+	tmpMatrix = T(tetras[nr].pos.x, tetras[nr].pos.y, tetras[nr].pos.z); // position
+	tmpMatrix = Mult(viewMatrix, tmpMatrix);
+    	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, tmpMatrix.m);
+	// Rita ut tetraeder? 
+	glBindVertexArray(tetraArray);
+	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
+}
 
 //Education is an admirable thing, but it is well to remember from time to time 
 //that nothing that is worth knowing can be taught.
 // Oscar Wilde
 
 // Uppdatera "fysiken" eller tetraweissarnas positioner
-void uppdatePos()
+/*void uppdatePos(int nr)
 {
 	int i;
 	for(i = 0; i < NO_OBJECTS; i++)
@@ -188,35 +237,8 @@ void uppdatePos()
 		// mer korrekt än förra men fel och går sjukt snabbt. 
 		tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass; 	
 	}	
-{}
-//Plane given by: ax + by + cz = d
-	//x = ad/(a² + b² + c²)
-	//y = bd/(a² + b² + c²)
-	//z = cd/(a² + b² + c²)
-	//x = X - X0, y = Y - Y0, z = Z - Z0, and d = D - aX0 - bY0 - cZ0, to obtain ax + by + cz = d
-void calcIntersection(int nr){
-	vec3 normal;
-	if(tetras[nr].pos.x >= XMAX)
-		normal = SetVector(-1.0f,0.0f,0.0f);
-		
-	if(tetras[nr].pos.x <= XMIN)
-		normal = SetVector(1.0f,0.0f,0.0f);
+}*/
 
-	if(tetras[nr].pos.x >= YMAX)
-		normal = SetVector(0.0f,-1.0f,0.0f);
-	
-	if(tetras[nr].pos.x <= YMIN)
-		normal = SetVector(0.0f,1.0f,0.0f);
-	
-	if(tetras[nr].pos.x >= ZMAX)
-		normal = SetVector(0.0f,0.0f,-1.0f);
-	if(tetras[nr].pos.x <= ZMIN)
-		normal = SetVector(0.0f,0.0f,1.0f);
-	
-	tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
-}
-
-}
 
 GLfloat tetraNormals[] = 
 {
@@ -266,7 +288,7 @@ void renderBall()
 void Display()
 {
 	// Uppdatera tetrornas pos och annat smött å gött 
-	uppdatePos();
+	//uppdatePos();
 
 	// Clear framebuffer & zbuffer
 	glClearColor(0.1, 0.1, 0.3, 0);
@@ -284,8 +306,8 @@ void Display()
 	// Scale and place bunny since it is too small
 	vm2 = Mult(vm2, T(0, -8.5, 0));
 	vm2 = Mult(vm2, S(200,200,200));
-	
-	viewMatrix = lookAt(0,  0,  2,  0,  0,  0,  0,  1,  0);
+
+	viewMatrix = lookAt(0,  0,  3,  0,  0,  0,  0,  1,  0);
 	
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
 	
@@ -296,14 +318,14 @@ void Display()
 	// Rita ut planet	
 	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
 	
-	
+	//drawTetra2();
 	int i; 
 	// Rita ut tetraeder
 	for(i = 0; i < NO_OBJECTS; i++) 
 	{
 		drawTetra(i); 
 	}
-
+	
 	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
 	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
@@ -312,7 +334,7 @@ void Display()
 
 	glBindVertexArray(tetraArray);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
-	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+	//glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 
 	//mat4 s = S(2.5, 2.5, 2.5);
 	
@@ -348,27 +370,6 @@ void Init()
 	printError("GL inits");
 
 	shader = loadShaders("shader.vert", "shader.frag");
-
-
-	//************************************************************
-	// Balls balls balls balls
-	sphere = LoadModelPlus("sphere.obj");
-	
-	ball[0].mass = 0.0001f;
-	ball[0].R = IdentityMatrix();
-	
-	ball[0].X = SetVector(1.0, 1.0, 1.0);
-	ball[0].P = SetVector(0, 0, 0);
-	
-	//************************************************************
-
-	printError("init shader");
-	
-	cam = SetVector(0, -1.5, 0.5);
-	point = SetVector(0, 0, 0);
-
-
-	//zprInit(&viewMatrix, cam, point);
 	
 	glUseProgram(shader);
 	projectionMatrix = perspective(90, 1.0, 0.1, 1000); // It would be silly to upload an uninitialized matrix
@@ -430,21 +431,26 @@ void Init()
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Normal"), 3, GL_FLOAT,
 	GL_FALSE, 0,0); 
 	
+	/*testTetra.mass = 0.0001f;
+	testTetra.pos = SetVector(0,0,0);
+	testTetra.vel = SetVector(0.02f,-0.01f,0.01f); */
 	
 	int i; 
 	// Initiera variabler för flera tetror
 	for (i = 0; i < NO_OBJECTS; i++)
 	{
-		tetras[i].tetraArr = tetraArray; 
+		//tetras[i].tetraArr = tetraArray; 
 
 		//glGenVertexArrays(1, &tetras[i].tetraArr);
 		//glBindVertexArray(tetras[i].tetraArr);
 	
-		tetras[i].mass = 0.00001;;
-		tetras[i].pos = SetVector(-1.0 + 0.5 * (float)i, 0.5, 0.5);			
+		tetras[i].mass = 0.00001;
+		tetras[i].pos = SetVector(-1.0 + 0.1 * (float)i, 0.5, 0.5);
+		tetras[i].vel = SetVector(i*0.01f,i*pow(-1.0f, i)*0.01f,0.01f); 	
+		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
 		
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 	}
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
