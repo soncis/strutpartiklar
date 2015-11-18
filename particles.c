@@ -42,6 +42,12 @@
 
 #define kBallSize 0.3
 #define boundRad 0.3
+#define cellSize 1.0
+// Antalet tetraedrar
+#define NO_OBJECTS 10
+#define gravity 9.82
+#define threshold 2
+#define nrCells 8
 
 GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
@@ -57,6 +63,59 @@ mat4 projectionMatrix;
 mat4 viewMatrix, vm2;
 mat4 tmpMatrix; 
 const float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
+
+// Tetra struts
+//*******************************************************************************************
+typedef struct
+{
+	// Tror inte denna behövs..
+	GLuint* tetraArr; 
+	
+	// Tetraederns massa
+	GLfloat mass;
+
+	// Om den ska synas eller inte 
+	int alive;
+	
+	// Positioner
+	 vec3 pos; 
+
+	// Hastigheten		
+	vec3 vel;
+
+} Tetra;
+
+//Marching cude
+//******************************************************************************************
+typedef struct
+{
+	// Positioner
+	 vec3 pos; 
+
+	//cube Storlek	SKRIV INTE ULFS	
+	//float size;
+
+} MCube;
+
+typedef struct 
+{
+
+	// inne/ute
+	int state;
+	
+	// antal partiklar
+	int nrParts;
+
+}Cell;
+
+// Array med alla tetras som ska ritas upp 
+// Glöm inte ändra denna med
+Tetra tetras[NO_OBJECTS];
+
+// En array av celler medelst innehåll
+Cell cell[nrCells];
+
+MCube mc;
 
 //Plane strushish
 GLfloat vertices[] = 
@@ -111,7 +170,8 @@ GLfloat tetraVertices[] =
 };
 
 //Indices for tetrahedron
-GLuint tetraIndicies[] = {
+GLuint tetraIndicies[] = 
+{
 	//front	
 	0,1,2, 
 	//right
@@ -122,43 +182,56 @@ GLuint tetraIndicies[] = {
 	1,3,2
 };
 
-// Antalet tetraedrar
-#define NO_OBJECTS 7
 
-#define gravity 9.82
-
-// Tetra struts
-//*******************************************************************************************
-typedef struct
+void March()
 {
-	// Tror inte denna behövs..
-	GLuint* tetraArr; 
-	
-	// Tetraederns massa
-	GLfloat mass;
+	mc.pos = SetVector(XMIN, YMIN, ZMIN);
+	int i;
+	// loop through all cells and calculate number of particles
+	for(i=0; i < nrCells; i++)
+	{ 
+		cell[i].nrParts = 0;
+		cell[i].state = 0;
+		int j;		
+		for(j=0; j<NO_OBJECTS; j++)
+		{
+			// Check if particle is inside this cell
+			//OBS! Will now register both cells on cell border
+			if(tetras[j].pos.x >= mc.pos.x 
+			&& tetras[j].pos.x <= (mc.pos.x + cellSize) 
+			&& tetras[j].pos.y >= mc.pos.y 
+			&& tetras[j].pos.y <= (mc.pos.y + cellSize)
+			&& tetras[j].pos.z >= mc.pos.z 
+			&& tetras[j].pos.z <= (mc.pos.z + cellSize))
+			{
+				// If particle is inside cell add to this cells particle count
+				cell[i].nrParts++;	
+			}
+				
+		}
+		
+		if(cell[i].nrParts >= threshold)
+		{
+			// If threshold is reached set state to 1!!!!!!!!!!!	
+			cell[i].state = 1;
+		}
+		/*
+		Step through cells using the position and check against the borders.
+		When XMAX position is used, step up in y direction and reset xpos.
+		*/
+		mc.pos.x += cellSize;
+		if(mc.pos.x == XMAX){
+			mc.pos.x = XMIN;
+			mc.pos.y += cellSize;
+			if(mc.pos.y == YMAX){
+				mc.pos.y = YMIN;
+				mc.pos.z += cellSize;
+			}
+		}
+	}
 
-	// Om den ska synas eller inte 
-	int alive;
-	
-	// Positioner
-	 vec3 pos; 
+}
 
-	// Hastigheten		
-	vec3 vel;
-
-} Tetra;
-
-// Array med alla tetras som ska ritas upp 
-// Glöm inte ändra denna med
-Tetra tetras[7];
-
-//Tetra testTetra;
-
-//Plane given by: ax + by + cz = d
-	//x = ad/(a² + b² + c²)
-	//y = bd/(a² + b² + c²)
-	//z = cd/(a² + b² + c²)
-	//x = X - X0, y = Y - Y0, z = Z - Z0, and d = D - aX0 - bY0 - cZ0, to obtain ax + by + cz = d
 void calcBounce(int nr){
 	vec3 normal = SetVector(0,0,0);
 	if(tetras[nr].pos.x >= XMAX){
@@ -191,23 +264,6 @@ void calcBounce(int nr){
 	}
 }
 
-// Kolla renderball för position
-/*void drawTetra(int nr)
-{
-	
-	// Använd tempmatrisen för förflyttning
-	tmpMatrix = T(tetras[nr].pos.x, tetras[nr].pos.y, tetras[nr].pos.z); // position
-	//tmpMatrix = T(0.5, 0.5, 0.5);	
-	
-	tmpMatrix = Mult(viewMatrix, tmpMatrix);
-    	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, tmpMatrix.m);
-
-	// Rita ut tetraeder? 
-	glBindVertexArray(tetraArray);	
-	//glBindVertexArray(tetras[nr].tetraArr);
-	//glBindVertexArray(tetraNormalArray);
-	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
-}*/
 
 void drawTetra(int nr)
 {
@@ -216,6 +272,7 @@ void drawTetra(int nr)
 	tmpMatrix = T(tetras[nr].pos.x, tetras[nr].pos.y, tetras[nr].pos.z); // position
 	tmpMatrix = Mult(viewMatrix, tmpMatrix);
     	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, tmpMatrix.m);
+	
 	// Rita ut tetraeder? 
 	glBindVertexArray(tetraArray);
 	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
@@ -252,32 +309,7 @@ GLfloat tetraNormals[] =
 	0.58f, 0.58f, -0.58f        
 };
 
-// En bolljävel
-//*******************************************************************************************
-typedef struct
-{
-  GLuint tex;
-  GLfloat mass;
 
-  vec3 X, P, L; // position, linear momentum, angular momentum
-  mat4 R; // Rotation
-
-  vec3 F, T; // accumulated force and torque
-
-//  mat4 J, Ji; We could have these but we can live without them for spheres.
-  vec3 omega; // Angular momentum
-  vec3 v; // Change in velocity
-
-} Ball;
-
-Model *sphere;
-Ball ball[1];
-
-void renderBall()
-{
-	DrawModel(sphere, shader, "in_Position", "in_Normal", NULL);
-	
-}
 
 
 //Some cause happiness wherever they go; others whenever they go.
@@ -288,7 +320,13 @@ void renderBall()
 void Display()
 {
 	// Uppdatera tetrornas pos och annat smött å gött 
-	//uppdatePos();
+	
+	March();
+	int dase;
+	for(dase=0; dase<8; dase++)	
+		printf("%i, ", cell[dase].nrParts);
+
+	printf("%s", "\n");
 
 	// Clear framebuffer & zbuffer
 	glClearColor(0.1, 0.1, 0.3, 0);
@@ -301,11 +339,6 @@ void Display()
 	glCullFace(GL_BACK);
 
 	glUseProgram(shader);
-	
-	vm2 = viewMatrix;
-	// Scale and place bunny since it is too small
-	vm2 = Mult(vm2, T(0, -8.5, 0));
-	vm2 = Mult(vm2, S(200,200,200));
 
 	viewMatrix = lookAt(0,  0,  3,  0,  0,  0,  0,  1,  0);
 	
@@ -317,8 +350,7 @@ void Display()
 
 	// Rita ut planet	
 	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
-	
-	//drawTetra2();
+
 	int i; 
 	// Rita ut tetraeder
 	for(i = 0; i < NO_OBJECTS; i++) 
@@ -334,12 +366,6 @@ void Display()
 
 	glBindVertexArray(tetraArray);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
-	//glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
-
-	//mat4 s = S(2.5, 2.5, 2.5);
-	
-	//glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
-	//renderBall();
 
 	glFlush();
 	
@@ -431,26 +457,19 @@ void Init()
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Normal"), 3, GL_FLOAT,
 	GL_FALSE, 0,0); 
 	
-	/*testTetra.mass = 0.0001f;
-	testTetra.pos = SetVector(0,0,0);
-	testTetra.vel = SetVector(0.02f,-0.01f,0.01f); */
-	
 	int i; 
 	// Initiera variabler för flera tetror
 	for (i = 0; i < NO_OBJECTS; i++)
 	{
-		//tetras[i].tetraArr = tetraArray; 
-
-		//glGenVertexArrays(1, &tetras[i].tetraArr);
-		//glBindVertexArray(tetras[i].tetraArr);
-	
+		
 		tetras[i].mass = 0.00001;
-		tetras[i].pos = SetVector(-1.0 + 0.1 * (float)i, 0.5, 0.5);
-		tetras[i].vel = SetVector(i*0.01f,i*pow(-1.0f, i)*0.01f,0.01f); 	
+		//tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.9 + 0.008 * (float)i, -0.9 + 0.005 * (float)i);
+		//tetras[i].vel = SetVector(0.02f,pow(-1.0f, i)*0.02f,pow(-1.0f, i)*0.001f); 
+		tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f, -0.5f);
+		tetras[i].vel = SetVector(0.001f,0.0f,0.0f); 	
+		
 		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
 		
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
-		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 	}
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
