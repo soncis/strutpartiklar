@@ -5,6 +5,10 @@
 // Kolla om man kan ladda in lite fler tetraedrar från array typ.. ?  
 
 
+// Experience is simply the name we give our mistakes.
+// Oscar Wilde
+
+
 #include <stdlib.h>
 
 

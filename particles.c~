@@ -5,6 +5,10 @@
 // Kolla om man kan ladda in lite fler tetraedrar från array typ.. ?  
 
 
+// Experience is simply the name we give our mistakes.
+
+
+
 #include <stdlib.h>
 
 
@@ -432,7 +436,7 @@ void Init()
 		//glGenVertexArrays(1, &tetras[i].tetraArr);
 		//glBindVertexArray(tetras[i].tetraArr);
 	
-		tetras[i].mass = 1.0;
+		tetras[i].mass = 0.00001;;
 		tetras[i].pos = SetVector(-1.0 + 0.5 * (float)i, 0.5, 0.5);			
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
