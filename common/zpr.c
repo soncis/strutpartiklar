@@ -43,7 +43,7 @@ void updateCameraMatrix(mat4 *matrix)
     }
 
     *_cameraMatrix = lookAt(camera.x, camera.y, camera.z,
-    					lookAtPoint.x, lookAtPoint.y, lookAtPoint.y, up.x, up.y, up.z);
+    					lookAtPoint.x, lookAtPoint.y, lookAtPoint.y, 0, 1, 0);
     right = SetVector(_cameraMatrix->m[0], _cameraMatrix->m[1], _cameraMatrix->m[2]);
     up = SetVector(_cameraMatrix->m[4], _cameraMatrix->m[5], _cameraMatrix->m[6]);
     fwd = SetVector(_cameraMatrix->m[8], _cameraMatrix->m[9], _cameraMatrix->m[10]);

@@ -802,7 +802,7 @@ void Display()
 
 	glUseProgram(shader);
 
-	viewMatrix = lookAt(0,  3,  3,  0,  0,  0,  0,  1,  0);
+	//viewMatrix = lookAt(0,  3,  3,  0,  0,  0,  0,  1,  0);
 	
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
 	
@@ -824,7 +824,10 @@ void Display()
 	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
 	mat4 rot = ArbRotate(SetVector(1.0, 0.0, 0.0), ang);
-	viewMatrix = Mult(viewMatrix, rot);
+
+	// Skapar en okontrollerbar rotation
+	// bortkommenterad för stunden	
+	//viewMatrix = Mult(viewMatrix, rot);
 
 	glBindVertexArray(tetraArray);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
@@ -940,7 +943,7 @@ void Init()
 		//tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.9 + 0.008 * (float)i, -0.9 + 0.005 * (float)i);
 		//tetras[i].vel = SetVector(0.02f,pow(-1.0f, i)*0.02f,pow(-1.0f, i)*0.001f); 
 		tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f, -0.5f);
-		tetras[i].vel = SetVector(0.01f,0.02f,0.03f); 	
+		tetras[i].vel = SetVector(0.0f,0.0f,0.03f); 	
 		
 		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
 		
@@ -957,8 +960,17 @@ void Init()
 	// Allocate Vertex Buffer Objects	
 	glGenBuffers(1, &mTriBuffer);
 	
+	//viewMatrix = lookAt(0,  3,  3,  0,  0,  0,  0,  1,  0);
+
+	// Så vi kan rotera scenen 
+	cam = SetVector(0, 0, 5);
+    	point = SetVector(0, 0, 0);
+    	zprInit(&viewMatrix, cam, point);
 	
 }
+
+// Experience is just the name we give to our misstakes
+// Oscar Wilde
 
 
 
