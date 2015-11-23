@@ -4,7 +4,6 @@
 
 // Kolla om man kan ladda in lite fler tetraedrar från array typ.. ?  
 
-
 #include <stdlib.h>
 
 
@@ -57,7 +56,8 @@ GLuint* vertexArrayObjID, vertexBufferObjID, normalBuffer, normalArray, shader;
 GLuint* tetraArray, tetraNormalArray, tetraVertexBuffer, tetraNormalBuffer, tetraIndexBuffer;
 GLuint* mTriArray, mTriBuffer;
 
-
+//Denna håller reda på hur stort utrymme det allokerade minnet tar. Används till bufferdata
+int triSize; 
 
 Point3D cam, point;
 
@@ -184,7 +184,9 @@ GLuint tetraIndicies[] =
 	1,3,2
 };
 
-GLfloat mTris[117];
+//Ändra till annan mer flexibel datastruktur
+//GLfloat mTris[117];
+GLfloat *mTris;
 
 //http://paulbourke.net/geometry/polygonise/
 int triTable[256][16] =
@@ -447,6 +449,7 @@ int triTable[256][16] =
 
 void March()
 {
+	//free(mTris);
 	mc.pos = SetVector(XMIN, YMIN, ZMIN);
 	int i;
 	// loop through all cells and calculate number of particles
@@ -502,7 +505,7 @@ void March()
 
 	for(j=0; j<nrCells; j++)
         {
-                //kommentarer är gay, detta gör vi för att inte alla hörnpunkter ska få värdet 1
+                //detta gör vi för att inte alla hörnpunkter ska få värdet 1
                 for(m=0; m<8; m++)
                         cubeCorners[m] = 0;
                 x++;
@@ -685,9 +688,18 @@ void March()
                 for(k = 0; k<16; k++)
                 {
                         tmp = triTable[Case][k];
-                        //printf("%i, ", tmp);
                         if(tmp != -1)
-                        {
+                        {	
+				GLfloat *temp = realloc(mTris,(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
+				
+				if ( temp != NULL ) {
+					mTris = temp;
+				} else {
+					free(mTris);
+					printf("%s", "FFFEEEEEEELL!!!!");				
+				}
+						
+
                                 mTris[count] = edge[tmp].x;
                                 count++;
                                 mTris[count] = edge[tmp].y;
@@ -698,8 +710,14 @@ void March()
                                 k=15;
                         }
                 }
+		
 	}
-}
+	
+	//Ge triSize storleken på det allokerade minnet
+	triSize = (count) * sizeof(GLfloat); 
+		
+	//printf("%i", triSize);
+}	
 
 void calcBounce(int nr){
 	vec3 normal = SetVector(0,0,0);
@@ -819,8 +837,10 @@ void Display()
 	{
 		drawTetra(i); 
 	}
+
+		
+
 	
-	glDrawArrays(GL_TRIANGLES, 0, 39);// draw objectperspective
 	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
 	mat4 rot = ArbRotate(SetVector(1.0, 0.0, 0.0), ang);
@@ -829,21 +849,28 @@ void Display()
 	// bortkommenterad för stunden	
 	//viewMatrix = Mult(viewMatrix, rot);
 
-	glBindVertexArray(tetraArray);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
+	//glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
         
         //KANSKE FEL!!!/////////////////////////////////////////////////////////////////////////////////
-        March();
+        March(); //Här kommer vi att få olika antal trianglar vilket innebär att vi måste kunna allokera en ny mängd minne
         // VBO for vertex data
+	//printf("%lu, ", sizeof(mTris)/sizeof(mTris[0]));
+	/////////////////////////////////////////////////////////////////////////////////////////////
+        // Detta kan bli väldigt fel 
+        glGenVertexArrays(1, &mTriArray);
+	glBindVertexArray(mTriArray);	
+
+	// Allocate Vertex Buffer Objects	
+	glGenBuffers(1, &mTriBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mTriBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(mTris), mTris, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, triSize, mTris, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);							//OBS DETTA SKA ANVÄNDAS. ANNARS BLIR DET SÄMST!!!
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"),
 	3, GL_FLOAT, GL_FALSE, 0, 0);
 
-        glBindVertexArray(mTriArray);        
-        //glDrawArrays(GL_TRIANGLES, 0, 39);// draw objectperspective
-
+        glBindVertexArray(mTriArray);      
+        glDrawArrays(GL_TRIANGLES, 0, (triSize/sizeof(GLfloat)/3));// draw objectperspective
+	printf("%lu \n", (triSize/sizeof(GLfloat)/3));
 	glFlush();
 	
 	glutSwapBuffers();
@@ -865,6 +892,8 @@ void Reshape(int h, int w)
 
 void Init()
 {
+	mTris = malloc(0); //Allokera lite minne till vår pointer
+
 	// GL inits
 	glClearColor(0.1, 0.1, 0.3, 0);
 	glClearDepth(1.0);
@@ -952,13 +981,7 @@ void Init()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 
-        /////////////////////////////////////////////////////////////////////////////////////////////
-        // Detta kan bli väldigt fel 
-        glGenVertexArrays(1, &mTriArray);
-	glBindVertexArray(mTriArray);	
-
-	// Allocate Vertex Buffer Objects	
-	glGenBuffers(1, &mTriBuffer);
+        
 	
 	//viewMatrix = lookAt(0,  3,  3,  0,  0,  0,  0,  1,  0);
 
