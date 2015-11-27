@@ -2,7 +2,44 @@
 //gcc particles.c marching.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
 
 
-// Kolla om man kan ladda in lite fler tetraedrar från array typ.. ?  
+/* 	// Interpolation i marching cubes...
+
+	http://www3.cs.stonybrook.edu/~mueller/teaching/cse564/marchingCubes.pdf
+	
+	iso = isovalue
+	u = distance between corner and interpolated point (typ.. avståndet mellan hörnet och där triangelns hörn är.) 
+	v1, v2 = obtained by central differencing ( verkar typ vara hörnen ) 
+	g1, g2 = gradient vectors	
+
+
+	iso = v1 * ( 1 - u ) + v2 * u
+	u = (v1 - iso) / (v1 - v2)
+
+	interpolate vertex color:
+	
+	c1 = u * c2 + ( 1 - u ) * c1
+
+	interpolate vertex normal: 
+
+	n1 = u * g2 + ( 1 - u ) * g1
+
+	// Remove Ambiguities Using the Asymptotic Decider Method 
+	// ??????????????????????????????????????????????????????	
+
+	Salpha = (B00 - B01) / (B00 + B11 - B01 - B10)
+	Talpha = (B00 - B01) / 
+
+	- a surface created by bilinear interpolation
+
+	function (1-s, s) [B00, B01; B10, B11] (1-t, t)
+
+	Give rise to 2 hypoerbolas B(s,t) = alpha (isovalue) 
+
+	-Ambiguity: both hyperbolas intersect domain (0,0) and (1,1)
+
+	-Resolve ambiguity by comparing B(Salpha, Talpha) with alpha 
+
+*/
 
 //#include <stdlib.h>
 
@@ -199,11 +236,6 @@ void drawTetra(int nr)
 	//glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
 }
 
-void drawFPS() 
-{
-	//glutBitmapStrings("hallå");
-}
-
 
 //Education is an admirable thing, but it is well to remember from time to time 
 //that nothing that is worth knowing can be taught.
@@ -247,7 +279,7 @@ GLfloat tetraNormals[] =
 void Display()
 {
 	char buf[100] = {0};
-	snprintf(buf, 100, "FPS: %.1f", FPS);
+	snprintf(buf, 100, "Sreums strutpartiklar, FPS : %.1f", FPS);
 
 	glutSetWindowTitle(buf);	
 	
@@ -283,9 +315,6 @@ void Display()
 		drawTetra(i); 
 	}
 
-	// Rita FPS	
-	//drawFPS();
-	
 	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
 	mat4 rot = ArbRotate(SetVector(1.0, 0.0, 0.0), ang);
@@ -334,6 +363,7 @@ void Reshape(int h, int w)
    	projectionMatrix = perspective(90, ratio, 0.1, 1000);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 }
+
 
 void Init()
 {
@@ -465,18 +495,6 @@ void calculateFPS()
     }
 }
 
-void Idle()
-{
-	glutPostRedisplay();
-	
-	//  Calculate FPS
-    	calculateFPS();
-}
-
-
-//I don't want to go to heaven. None of my friends are there.
-// Oscar Wilde
-
 // funkar inte... än
 void Keyboardfunk(unsigned char key, int x, int y)
 {	
@@ -485,7 +503,7 @@ void Keyboardfunk(unsigned char key, int x, int y)
 	if(key == 27)
 	{
 		printf("%s", "Marching cubes on");
-		exit(-1);	
+			
 	}
 	/*switch (key)
 	{
@@ -503,6 +521,20 @@ void Keyboardfunk(unsigned char key, int x, int y)
 			exit(0);
 	}*/
 }
+
+void Idle()
+{
+	glutPostRedisplay();
+	
+	//  Calculate FPS
+    	calculateFPS();
+}
+
+
+//I don't want to go to heaven. None of my friends are there.
+// Oscar Wilde
+
+
 
 
 
@@ -523,7 +555,7 @@ int main(int argc, char *argv[])
 	glutIdleFunc(Idle);
 	
 	// Tangäntbård
-	//glutKeyboardFunc(Keyboardfunk);
+	glutKeyboardFunc(Keyboardfunk);
 
 	Init();
 	
