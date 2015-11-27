@@ -142,7 +142,7 @@ GLfloat vertices[] =
         1.0f, -1.0f, -1.0f,
         -1.0f, -1.0f, -1.0f
 };
-
+//http://cdn.thedailybeast.com/content/dailybeast/articles/2013/01/03/oscar-wilde-s-american-tour/jcr:content/image.img.2000.jpg/1357250876652.cached.jpg
 GLfloat normals[] = 
 {
         // Left bottom triangle

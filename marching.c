@@ -6,11 +6,26 @@ Biggie was a phat MC
 I'm MCing at a house party tonight, you coming? 
 */
 
+// Varför ser Gubbsatan ut som Loni Anderson?
+// Varför ser Legolas ut som Jon Voight? 
+// Varför ser Täby Bronx? 
+
 #include "marching.h"
 
+// ööh.. 
+#define abs(x) (x > 0.0? x: -x)
 
 int triSize;
 float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
+
+// öööh.. interpolation? 
+// Half da cube.. can be changed
+float isolevel = 0.5; 
+
+// probably not needed or already included
+vec3 p1,p2;
+double valp1,valp2;
+
 
 GLfloat* March(GLfloat *mTris, Tetra *tetras)
 {
@@ -230,22 +245,26 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 		{
                         Case += cubeCorners[k];
                 }
+
                 //vart ligger edgesen i världen
+
                 //botten av cuben
-                edge[0]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
-                edge[1]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                edge[2]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
-                edge[3]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                //toppen av cuben
-                edge[4]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
-                edge[5]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                edge[6]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
-                edge[7]=SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                //sidorna av cuben
-                edge[8]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-                edge[9]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-                edge[10]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
-                edge[11]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
+                edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
+                edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+                edge[2] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
+                edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+                
+		//toppen av cuben
+                edge[4] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
+                edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+                edge[6] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
+                edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+                
+		//sidorna av cuben
+                edge[8] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
+                edge[9] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
+                edge[10] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
+                edge[11] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
                 
                 //hämta vilket case
                 int tmp;
@@ -289,7 +308,31 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 	//printf("%i", triSize);
 }	
 
+// Linear interpolation 
+vec3 interpolate(vec3 p1, vec3 p2, double valp1, double valp2)
+{
+	vec3 p; 
+	double mu;
+ 
 
+	if (abs(isolevel-valp1) < 0.00001)
+		return(p1);
+	
+	if (abs(isolevel-valp2) < 0.00001)
+		return(p2);
+	
+	if (abs(valp1-valp2) < 0.00001)
+		return(p1);
+
+	mu = (isolevel - valp1) / (valp2 - valp1);
+
+	p.x = p1.x + mu * (p2.x - p1.x);
+	p.y = p1.y + mu * (p2.y - p1.y);
+	p.z = p1.z + mu * (p2.z - p1.z);
+
+	return p; 
+
+}
 
 //http://paulbourke.net/geometry/polygonise/
 int triTable[256][16] =
@@ -549,4 +592,8 @@ int triTable[256][16] =
 {0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
+// Every saint has a past and every sinner has a future
+// Oscar Wilde
 
