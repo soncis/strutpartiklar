@@ -7,8 +7,8 @@
 	http://www3.cs.stonybrook.edu/~mueller/teaching/cse564/marchingCubes.pdf
 	
 	iso = isovalue
-	u = distance between corner and interpolated point (typ.. avståndet mellan hörnet och där triangelns hörn är.) 
-	v1, v2 = obtained by central differencing ( verkar typ vara hörnen ) 
+	u = distance between corner and interpolated point (typ.. avstandet mellan hornet och där triangelns horn är.) 
+	v1, v2 = obtained by central differencing https://en.wikipedia.org/wiki/Central_differencing_scheme  
 	g1, g2 = gradient vectors	
 
 
@@ -27,7 +27,7 @@
 	// ??????????????????????????????????????????????????????	
 
 	Salpha = (B00 - B01) / (B00 + B11 - B01 - B10)
-	Talpha = (B00 - B01) / 
+	Talpha = (B00 - B01) / (B00 + B11 - B01 - B10)
 
 	- a surface created by bilinear interpolation
 
@@ -192,31 +192,38 @@ GLfloat *mTris;
 
 void calcBounce(int nr){
 	vec3 normal = SetVector(0,0,0);
-	if(tetras[nr].pos.x >= X2){
+	if(tetras[nr].pos.x >= X2)
+	{
 		normal = SetVector(-1.0f,0.0f,0.0f);
 		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
 	}
 		
-	if(tetras[nr].pos.x <= X1){
+	if(tetras[nr].pos.x <= X1)
+	{
 		normal = SetVector(1.0f,0.0f,0.0f);
 		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
 	}
 
-	if(tetras[nr].pos.y >= Y2){
+	if(tetras[nr].pos.y >= Y2)
+	{
 		normal = SetVector(0.0f,-1.0f,0.0f);
 		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
 	}
 	
-	if(tetras[nr].pos.y <= Y1){
+	if(tetras[nr].pos.y <= Y1)
+	{
 		normal = SetVector(0.0f,1.0f,0.0f);
 		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
 	}
 	
-	if(tetras[nr].pos.z >= Z2){
+	if(tetras[nr].pos.z >= Z2)
+	{
 		normal = SetVector(0.0f,0.0f,-1.0f);
 		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
 	}
-	if(tetras[nr].pos.z <= Z1){
+
+	if(tetras[nr].pos.z <= Z1)
+	{
 		normal = SetVector(0.0f,0.0f,1.0f);
 		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
 	}

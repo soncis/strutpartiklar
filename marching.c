@@ -226,7 +226,8 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 
                 int k;
                 Case = 0;
-                for(k = 0; k<8; k++){
+                for(k = 0; k<8; k++)
+		{
                         Case += cubeCorners[k];
                 }
                 //vart ligger edgesen i världen
@@ -256,9 +257,13 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                         {	
 				GLfloat *temp = realloc(mTris,(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
 				
-				if ( temp != NULL ) {
+				if ( temp != NULL ) 
+				{
 					mTris = temp;
-				} else {
+	
+				} 
+				else 
+				{
 					free(mTris);
 					printf("%s", "FFFEEEEEEELL!!!!");				
 				}
@@ -270,9 +275,10 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                                 count++;                                
                                 mTris[count] = edge[tmp].z;
                                 count++;
-                        }else{
-                                k=15;
                         }
+			else
+                        	k=15;
+                        
                 }
 		
 	}
