@@ -9,6 +9,282 @@ I'm MCing at a house party tonight, you coming?
 #include "marching.h"
 
 
+
+
+int triSize;
+float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
+
+GLfloat* March(GLfloat *mTris, Tetra *tetras)
+{
+	mc.pos = SetVector(XMIN, YMIN, ZMIN);
+	int i;
+	// loop through all cells and calculate number of particles
+	for(i=0; i < DIM*DIM*DIM; i++)
+	{ 
+		cell[i].nrParts = 0;
+		cell[i].state = 0;
+		int j;		
+		for(j=0; j<NO_OBJECTS; j++)
+		{
+			// Check if particle is inside this cell
+			//OBS! Will now register both cells on cell border
+			if(tetras[j].pos.x >= mc.pos.x 
+			&& tetras[j].pos.x <= (mc.pos.x + cellSize) 
+			&& tetras[j].pos.y >= mc.pos.y 
+			&& tetras[j].pos.y <= (mc.pos.y + cellSize)
+			&& tetras[j].pos.z >= mc.pos.z 
+			&& tetras[j].pos.z <= (mc.pos.z + cellSize))
+			{
+				// If particle is inside cell add to this cells particle count
+				cell[i].nrParts++;	
+			}
+				
+		}
+		
+		if(cell[i].nrParts >= threshold)
+		{
+			// If threshold is reached set state to 1!!!!!!!!!!!	
+			cell[i].state = 1;
+		}
+		/*
+		Step through cells using the position and check against the borders.
+		When XMAX position is used, step up in y direction and reset xpos.
+		*/
+		mc.pos.x += cellSize;
+		if(mc.pos.x == XMAX)
+                {
+			mc.pos.x = XMIN;
+			mc.pos.y += cellSize;
+
+			if(mc.pos.y == YMAX)
+                        {
+				mc.pos.y = YMIN;
+				mc.pos.z += cellSize;
+			}
+		}
+	}
+	int m, j, x, y, z, Case;
+        y=z=0;
+        x=-1;
+        vec3 edge[12];
+        int count = 0;
+
+	for(j=0; j<DIM*DIM*DIM; j++)
+        {
+                //detta gör vi för att inte alla hörnpunkter ska få värdet 1
+                for(m=0; m<8; m++)
+                        cubeCorners[m] = 0;
+                x++;
+                if(x==DIM)
+                {
+                        y++;
+                        x=0;
+                }
+                if(y==DIM)
+                {
+                        z++;
+                        x=y=0;
+                }
+                
+                //Kolla mot kuber som ligger "vägg i vägg" med vår kub
+                
+		if(x!=0 && cell[j-1].state == 1)
+                {
+			cubeCorners[0] = 1;
+                        cubeCorners[3] = 8;
+                        cubeCorners[4] = 16;
+                        cubeCorners[7] = 128;
+		}
+                if(x!=DIM-1 && cell[j+1].state == 1)
+                {
+                        cubeCorners[1] = 2;
+                        cubeCorners[2] = 4;
+                        cubeCorners[5] = 32;
+                        cubeCorners[6] = 64;
+                }
+                if(y!=0 && cell[j-DIM].state == 1){
+                        cubeCorners[0] = 1;
+                        cubeCorners[1] = 2;
+                        cubeCorners[2] = 4;     
+                        cubeCorners[3] = 8;
+                }
+                if(y!=DIM-1 && cell[j+DIM].state == 1)
+                {
+                        cubeCorners[4] = 16;
+                        cubeCorners[5] = 32;
+                        cubeCorners[6] = 64;
+                        cubeCorners[7] = 128;
+                }
+                if(z!=0 && cell[j-DIM*DIM].state == 1){
+                        cubeCorners[0] = 1;
+                        cubeCorners[1] = 2;
+                        cubeCorners[4] = 16;
+                        cubeCorners[5] = 32;
+                }       
+                if(z!=DIM-1 && cell[j+DIM*DIM].state == 1)
+                {
+                        cubeCorners[2] = 4;     
+                        cubeCorners[3] = 8;
+                        cubeCorners[6] = 64;
+                        cubeCorners[7] = 128;
+                }
+                
+                //Kolla kuber som delar en edge med vår kub
+                if(x!=0 && y!=0 && cell[j-DIM - 1].state == 1)
+                {
+                        cubeCorners[0] = 1;
+                        cubeCorners[3] = 8;
+                }
+                if(x!=DIM-1 && y!=0 && cell[j-DIM + 1].state == 1)
+                {
+                        cubeCorners[1] = 2;
+                        cubeCorners[2] = 4;
+                }
+                if(y!=0 && z!=0 && cell[j-DIM - DIM*DIM].state == 1)
+                {
+                        cubeCorners[0] = 1;
+                        cubeCorners[1] = 2;
+                }
+                if(y!=0 && z!=DIM-1 && cell[j-DIM + DIM*DIM].state == 1)
+                {
+                        cubeCorners[2] = 4;
+                        cubeCorners[3] = 8;
+                }
+                if(x!=0 && y!=DIM-1 && cell[j+DIM - 1].state == 1)
+                {
+                        cubeCorners[4] = 16;
+                        cubeCorners[7] = 128;
+                }
+                if(x!=DIM-1 && y!=DIM-1 && cell[j+DIM + 1].state == 1)
+                {
+                        cubeCorners[5] = 32;
+                        cubeCorners[6] = 64;
+                }
+                if(y!=DIM-1 && z!=0 && cell[j+DIM - DIM*DIM].state == 1)
+                {
+                        cubeCorners[4] = 16;
+                        cubeCorners[5] = 32;
+                }
+                if(y!=DIM-1 && z!=DIM-1 && cell[j+DIM + DIM*DIM].state == 1)
+                {
+                        cubeCorners[6] = 64;
+                        cubeCorners[7] = 128;
+                }    
+                if(x!=0 && z!=0 && cell[j-1 - DIM*DIM].state == 1)
+                {
+                        cubeCorners[0] = 1;
+                        cubeCorners[4] = 16;
+                }
+                if(x!=DIM-1 && z!=0 && cell[j+1 - DIM*DIM].state == 1)
+                {
+                        cubeCorners[1] = 2;
+                        cubeCorners[5] = 32;
+                }
+                if(x!=0 && z!=DIM-1 && cell[j-1 + DIM*DIM].state == 1)
+                {
+                        cubeCorners[7] = 128;
+                        cubeCorners[3] = 8;
+                }    
+                if(x!=DIM-1 && z!=DIM-1 && cell[j+1 + DIM*DIM].state == 1)
+                {
+                        cubeCorners[6] = 64;
+                        cubeCorners[2] = 4;
+                }  
+ 
+                //Kollar kuber som delar hörnpunkt med vår kub
+                if(x!=0 && y!=0 && z!=0 && cell[j-1 - DIM - DIM*DIM].state == 1)
+                {
+                        cubeCorners[0] = 1;
+                } 
+                if(x!=DIM-1 && y!=0 && z!=0 && cell[j+1 - DIM - DIM*DIM].state == 1)
+                {
+                        cubeCorners[1] = 2;
+                }  
+                if(x!=0 && y!=0 && z!=DIM-1 && cell[j-1 - DIM + DIM*DIM].state == 1)
+                {
+                        cubeCorners[3] = 8;
+                } 
+                if(x!=DIM-1 && y!=0 && z!=DIM-1 && cell[j+1 - DIM + DIM*DIM].state == 1)
+                {
+                        cubeCorners[2] = 4;
+                }
+                if(x!=0 && y!=DIM-1 && z!=0 && cell[j-1 + DIM - DIM*DIM].state == 1)
+                {
+                        cubeCorners[4] = 16;
+                } 
+                if(x!=DIM-1 && y!=DIM-1 && z!=0 && cell[j+1 + DIM - DIM*DIM].state == 1)
+                {
+                        cubeCorners[5] = 32;
+                }  
+                if(x!=0 && y!=DIM-1 && z!=DIM-1 && cell[j-1 + DIM + DIM*DIM].state == 1)
+                {
+                        cubeCorners[7] = 128;
+                } 
+                if(x!=DIM-1 && y!=DIM-1 && z!=DIM-1 && cell[j+1 + DIM + DIM*DIM].state == 1)
+                {
+                        cubeCorners[6] = 64;
+                }
+                
+
+                int k;
+                Case = 0;
+                for(k = 0; k<8; k++){
+                        Case += cubeCorners[k];
+                }
+                //vart ligger edgesen i världen
+                //botten av cuben
+                edge[0]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
+                edge[1]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+                edge[2]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
+                edge[3]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+                //toppen av cuben
+                edge[4]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
+                edge[5]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+                edge[6]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
+                edge[7]=SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+                //sidorna av cuben
+                edge[8]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
+                edge[9]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
+                edge[10]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
+                edge[11]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
+                
+                //hämta vilket case
+                int tmp;
+                
+                for(k = 0; k<16; k++)
+                {
+                        tmp = triTable[Case][k];
+                        if(tmp != -1)
+                        {	
+				GLfloat *temp = realloc(mTris,(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
+				
+				if ( temp != NULL ) {
+					mTris = temp;
+				} else {
+					free(mTris);
+					printf("%s", "FFFEEEEEEELL!!!!");				
+				}
+						
+
+                                mTris[count] = edge[tmp].x;
+                                count++;
+                                mTris[count] = edge[tmp].y;
+                                count++;                                
+                                mTris[count] = edge[tmp].z;
+                                count++;
+                        }else{
+                                k=15;
+                        }
+                }
+		
+	}
+	
+	//Ge triSize storleken på det allokerade minnet
+	triSize = (count) * sizeof(GLfloat); 
+	return mTris;
+	//printf("%i", triSize);
+}	
+
 //http://paulbourke.net/geometry/polygonise/
 int triTable[256][16] =
 {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -267,278 +543,3 @@ int triTable[256][16] =
 {0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
-
-int triSize;
-float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
-
-GLfloat* March(GLfloat *mTris, Tetra *tetras)
-{
-	mc.pos = SetVector(XMIN, YMIN, ZMIN);
-	int i;
-	// loop through all cells and calculate number of particles
-	for(i=0; i < nrCells; i++)
-	{ 
-		cell[i].nrParts = 0;
-		cell[i].state = 0;
-		int j;		
-		for(j=0; j<NO_OBJECTS; j++)
-		{
-			// Check if particle is inside this cell
-			//OBS! Will now register both cells on cell border
-			if(tetras[j].pos.x >= mc.pos.x 
-			&& tetras[j].pos.x <= (mc.pos.x + cellSize) 
-			&& tetras[j].pos.y >= mc.pos.y 
-			&& tetras[j].pos.y <= (mc.pos.y + cellSize)
-			&& tetras[j].pos.z >= mc.pos.z 
-			&& tetras[j].pos.z <= (mc.pos.z + cellSize))
-			{
-				// If particle is inside cell add to this cells particle count
-				cell[i].nrParts++;	
-			}
-				
-		}
-		
-		if(cell[i].nrParts >= threshold)
-		{
-			// If threshold is reached set state to 1!!!!!!!!!!!	
-			cell[i].state = 1;
-		}
-		/*
-		Step through cells using the position and check against the borders.
-		When XMAX position is used, step up in y direction and reset xpos.
-		*/
-		mc.pos.x += cellSize;
-		if(mc.pos.x == XMAX)
-                {
-			mc.pos.x = XMIN;
-			mc.pos.y += cellSize;
-
-			if(mc.pos.y == YMAX)
-                        {
-				mc.pos.y = YMIN;
-				mc.pos.z += cellSize;
-			}
-		}
-	}
-	int m, j, x, y, z, Case;
-        y=z=0;
-        x=-1;
-        vec3 edge[12];
-        int count = 0;
-
-	for(j=0; j<nrCells; j++)
-        {
-                //detta gör vi för att inte alla hörnpunkter ska få värdet 1
-                for(m=0; m<8; m++)
-                        cubeCorners[m] = 0;
-                x++;
-                if(x==DIM)
-                {
-                        y++;
-                        x=0;
-                }
-                if(y==DIM)
-                {
-                        z++;
-                        x=y=0;
-                }
-                
-                //Kolla mot kuber som ligger "vägg i vägg" med vår kub
-                
-		if(x!=0 && cell[j-1].state == 1)
-                {
-			cubeCorners[0] = 1;
-                        cubeCorners[3] = 8;
-                        cubeCorners[4] = 16;
-                        cubeCorners[7] = 128;
-		}
-                if(x!=DIM-1 && cell[j+1].state == 1)
-                {
-                        cubeCorners[1] = 2;
-                        cubeCorners[2] = 4;
-                        cubeCorners[5] = 32;
-                        cubeCorners[6] = 64;
-                }
-                if(y!=0 && cell[j-DIM].state == 1){
-                        cubeCorners[0] = 1;
-                        cubeCorners[1] = 2;
-                        cubeCorners[2] = 4;     
-                        cubeCorners[3] = 8;
-                }
-                if(y!=DIM-1 && cell[j+DIM].state == 1)
-                {
-                        cubeCorners[4] = 16;
-                        cubeCorners[5] = 32;
-                        cubeCorners[6] = 64;
-                        cubeCorners[7] = 128;
-                }
-                if(z!=0 && cell[j-DIM*DIM].state == 1){
-                        cubeCorners[0] = 1;
-                        cubeCorners[1] = 2;
-                        cubeCorners[4] = 16;
-                        cubeCorners[5] = 32;
-                }       
-                if(z!=DIM-1 && cell[j+DIM*DIM].state == 1)
-                {
-                        cubeCorners[2] = 4;     
-                        cubeCorners[3] = 8;
-                        cubeCorners[6] = 64;
-                        cubeCorners[7] = 128;
-                }
-                
-                //Kolla kuber som delar en edge med vår kub
-                if(x!=0 && y!=0 && cell[j-DIM - 1].state == 1)
-                {
-                        cubeCorners[0] = 1;
-                        cubeCorners[3] = 8;
-                }
-                if(x!=DIM-1 && y!=0 && cell[j-DIM + 1].state == 1)
-                {
-                        cubeCorners[1] = 2;
-                        cubeCorners[2] = 4;
-                }
-                if(y!=0 && z!=0 && cell[j-DIM - DIM*DIM].state == 1)
-                {
-                        cubeCorners[0] = 1;
-                        cubeCorners[1] = 2;
-                }
-                if(y!=0 && z!=DIM-1 && cell[j-DIM + DIM*DIM].state == 1)
-                {
-                        cubeCorners[2] = 4;
-                        cubeCorners[3] = 8;
-                }
-                if(x!=0 && y!=DIM-1 && cell[j+DIM - 1].state == 1)
-                {
-                        cubeCorners[4] = 16;
-                        cubeCorners[7] = 128;
-                }
-                if(x!=DIM-1 && y!=DIM-1 && cell[j+DIM + 1].state == 1)
-                {
-                        cubeCorners[5] = 32;
-                        cubeCorners[6] = 64;
-                }
-                if(y!=DIM-1 && z!=0 && cell[j+DIM - DIM*DIM].state == 1)
-                {
-                        cubeCorners[4] = 16;
-                        cubeCorners[5] = 32;
-                }
-                if(y!=DIM-1 && z!=DIM-1 && cell[j+DIM + DIM*DIM].state == 1)
-                {
-                        cubeCorners[6] = 64;
-                        cubeCorners[7] = 128;
-                }    
-                if(x!=0 && z!=0 && cell[j-1 - DIM*DIM].state == 1)
-                {
-                        cubeCorners[0] = 1;
-                        cubeCorners[4] = 16;
-                }
-                if(x!=DIM-1 && z!=0 && cell[j+1 - DIM*DIM].state == 1)
-                {
-                        cubeCorners[1] = 2;
-                        cubeCorners[5] = 32;
-                }
-                if(x!=0 && z!=DIM-1 && cell[j-1 + DIM*DIM].state == 1)
-                {
-                        cubeCorners[7] = 128;
-                        cubeCorners[3] = 8;
-                }    
-                if(x!=DIM-1 && z!=DIM-1 && cell[j+1 + DIM*DIM].state == 1)
-                {
-                        cubeCorners[6] = 64;
-                        cubeCorners[2] = 4;
-                }  
- 
-                //Kollar kuber som delar hörnpunkt med vår kub
-                if(x!=0 && y!=0 && z!=0 && cell[j-1 - DIM - DIM*DIM].state == 1)
-                {
-                        cubeCorners[0] = 1;
-                } 
-                if(x!=DIM-1 && y!=0 && z!=0 && cell[j+1 - DIM - DIM*DIM].state == 1)
-                {
-                        cubeCorners[1] = 2;
-                }  
-                if(x!=0 && y!=0 && z!=DIM-1 && cell[j-1 - DIM + DIM*DIM].state == 1)
-                {
-                        cubeCorners[3] = 8;
-                } 
-                if(x!=DIM-1 && y!=0 && z!=DIM-1 && cell[j+1 - DIM + DIM*DIM].state == 1)
-                {
-                        cubeCorners[2] = 4;
-                }
-                if(x!=0 && y!=DIM-1 && z!=0 && cell[j-1 + DIM - DIM*DIM].state == 1)
-                {
-                        cubeCorners[4] = 16;
-                } 
-                if(x!=DIM-1 && y!=DIM-1 && z!=0 && cell[j+1 + DIM - DIM*DIM].state == 1)
-                {
-                        cubeCorners[5] = 32;
-                }  
-                if(x!=0 && y!=DIM-1 && z!=DIM-1 && cell[j-1 + DIM + DIM*DIM].state == 1)
-                {
-                        cubeCorners[7] = 128;
-                } 
-                if(x!=DIM-1 && y!=DIM-1 && z!=DIM-1 && cell[j+1 + DIM + DIM*DIM].state == 1)
-                {
-                        cubeCorners[6] = 64;
-                }
-                
-
-                int k;
-                Case = 0;
-                for(k = 0; k<8; k++){
-                        Case += cubeCorners[k];
-                }
-                //vart ligger edgesen i världen
-                //botten av cuben
-                edge[0]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
-                edge[1]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                edge[2]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
-                edge[3]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                //toppen av cuben
-                edge[4]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
-                edge[5]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                edge[6]=SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
-                edge[7]=SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                //sidorna av cuben
-                edge[8]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-                edge[9]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-                edge[10]=SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
-                edge[11]=SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
-                
-                //hämta vilket case
-                int tmp;
-                
-                for(k = 0; k<16; k++)
-                {
-                        tmp = triTable[Case][k];
-                        if(tmp != -1)
-                        {	
-				GLfloat *temp = realloc(mTris,(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
-				
-				if ( temp != NULL ) {
-					mTris = temp;
-				} else {
-					free(mTris);
-					printf("%s", "FFFEEEEEEELL!!!!");				
-				}
-						
-
-                                mTris[count] = edge[tmp].x;
-                                count++;
-                                mTris[count] = edge[tmp].y;
-                                count++;                                
-                                mTris[count] = edge[tmp].z;
-                                count++;
-                        }else{
-                                k=15;
-                        }
-                }
-		
-	}
-	
-	//Ge triSize storleken på det allokerade minnet
-	triSize = (count) * sizeof(GLfloat); 
-	return mTris;
-	//printf("%i", triSize);
-}	
-
