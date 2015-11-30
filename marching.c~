@@ -19,8 +19,8 @@ int triSize;
 float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
 
 // öööh.. interpolation? 
-// Half da cube.. can be changed
-float isolevel = 0.5; 
+// Half da cube.. can be changed (but not in runtime)
+const float isolevel = 0.5; 
 
 // probably not needed or already included
 vec3 p1,p2;

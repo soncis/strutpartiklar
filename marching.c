@@ -19,8 +19,8 @@ int triSize;
 float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
 
 // öööh.. interpolation? 
-// Half da cube.. can be changed
-float isolevel = 0.5; 
+// Half da cube.. can be changed (but not in runtime)
+const float isolevel = 0.5; 
 
 // probably not needed or already included
 vec3 p1,p2;
@@ -307,6 +307,46 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 	return mTris;
 	//printf("%i", triSize);
 }	
+
+/* 	// Interpolation i marching cubes...
+
+	http://www3.cs.stonybrook.edu/~mueller/teaching/cse564/marchingCubes.pdf
+	
+	iso = isovalue
+	u = distance between corner and interpolated point (typ.. avstandet mellan hornet och där triangelns horn är.) 
+	v1, v2 = obtained by central differencing https://en.wikipedia.org/wiki/Central_differencing_scheme  
+	g1, g2 = gradient vectors	
+
+
+	iso = v1 * ( 1 - u ) + v2 * u
+	u = (v1 - iso) / (v1 - v2)
+
+	interpolate vertex color:
+	
+	c1 = u * c2 + ( 1 - u ) * c1
+
+	interpolate vertex normal: 
+
+	n1 = u * g2 + ( 1 - u ) * g1
+
+	// Remove Ambiguities Using the Asymptotic Decider Method 
+	// ??????????????????????????????????????????????????????	
+
+	Salpha = (B00 - B01) / (B00 + B11 - B01 - B10)
+	Talpha = (B00 - B01) / (B00 + B11 - B01 - B10)
+
+	- a surface created by bilinear interpolation
+
+	function (1-s, s) [B00, B01; B10, B11] (1-t, t)
+
+	Give rise to 2 hypoerbolas B(s,t) = alpha (isovalue) 
+
+	-Ambiguity: both hyperbolas intersect domain (0,0) and (1,1)
+
+	-Resolve ambiguity by comparing B(Salpha, Talpha) with alpha 
+
+*/
+
 
 // Linear interpolation 
 vec3 interpolate(vec3 p1, vec3 p2, double valp1, double valp2)
