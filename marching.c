@@ -32,7 +32,7 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 	mc.pos = SetVector(XMIN, YMIN, ZMIN);
 	int i;
 	// loop through all cells and calculate number of particles
-	for(i=0; i < nrCells; i++)
+	for(i=0; i < DIM*DIM*DIM; i++)
 	{ 
 		cell[i].nrParts = 0;
 		cell[i].state = 0;
@@ -82,7 +82,7 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
         vec3 edge[12];
         int count = 0;
 
-	for(j=0; j<nrCells; j++)
+	for(j=0; j<DIM*DIM*DIM; j++)
         {
                 //detta gör vi för att inte alla hörnpunkter ska få värdet 1
                 for(m=0; m<8; m++)
@@ -333,6 +333,10 @@ vec3 interpolate(vec3 p1, vec3 p2, double valp1, double valp2)
 	return p; 
 
 }
+
+
+// Every saint has a past and every sinner has a future
+// Oscar Wilde
 
 //http://paulbourke.net/geometry/polygonise/
 int triTable[256][16] =
@@ -592,8 +596,3 @@ int triTable[256][16] =
 {0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
-
-
-// Every saint has a past and every sinner has a future
-// Oscar Wilde
-
