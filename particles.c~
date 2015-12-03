@@ -454,7 +454,7 @@ void Init()
 		tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
 		//tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
 		//tetras[i].vel = SetVector(0.0,0.0,0.0);
-		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/2.0f))); 	
+		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.00001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/2.0f))); 	
 		
 		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
 		

@@ -1,45 +1,17 @@
+/*
+	Marching Gangster cubes
+	TSBK03
+	Linköpings tekniska högskola
+	Rövargänget:
+	Gustav "Gubbsatan" Hallström
+	Sebastian "Legolas" Alfredsson
+	Viktor "Täbybronks" Kraft
+*/
+
+
 // OpenGL 3 conversion 2013.
 //gcc particles.c marching.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
 
-
-/* 	// Interpolation i marching cubes...
-
-	http://www3.cs.stonybrook.edu/~mueller/teaching/cse564/marchingCubes.pdf
-	
-	iso = isovalue
-	u = distance between corner and interpolated point (typ.. avstandet mellan hornet och där triangelns horn är.) 
-	v1, v2 = obtained by central differencing https://en.wikipedia.org/wiki/Central_differencing_scheme  
-	g1, g2 = gradient vectors	
-
-
-	iso = v1 * ( 1 - u ) + v2 * u
-	u = (v1 - iso) / (v1 - v2)
-
-	interpolate vertex color:
-	
-	c1 = u * c2 + ( 1 - u ) * c1
-
-	interpolate vertex normal: 
-
-	n1 = u * g2 + ( 1 - u ) * g1
-
-	// Remove Ambiguities Using the Asymptotic Decider Method 
-	// ??????????????????????????????????????????????????????	
-
-	Salpha = (B00 - B01) / (B00 + B11 - B01 - B10)
-	Talpha = (B00 - B01) / (B00 + B11 - B01 - B10)
-
-	- a surface created by bilinear interpolation
-
-	function (1-s, s) [B00, B01; B10, B11] (1-t, t)
-
-	Give rise to 2 hypoerbolas B(s,t) = alpha (isovalue) 
-
-	-Ambiguity: both hyperbolas intersect domain (0,0) and (1,1)
-
-	-Resolve ambiguity by comparing B(Salpha, Talpha) with alpha 
-
-*/
 
 //#include <stdlib.h>
 
@@ -191,6 +163,8 @@ GLuint tetraIndicies[] =
 GLfloat *mTris;
 GLfloat *mNorms;
 
+// Every saint has a past and every sinner has a future
+// Oscar Wilde
 
 void calcBounce(int nr){
 	vec3 normal = SetVector(0,0,0);
@@ -451,12 +425,12 @@ void Init()
 	{
 		
 		tetras[i].mass = 0.00001;
-		tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
-		//tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
-		//tetras[i].vel = SetVector(0.0,0.0,0.0);
-		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.00001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/2.0f))); 	
-		
-		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
+
+		//tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
+		tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
+		//tetras[i].pos = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0022f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0023f * sin(i*(3.14f/2.0f)));
+		//tetras[i].vel = SetVector(0.0001f* (float)i,0.0003f * (float)i,0.0002f * (float)i);
+		tetras[i].vel = SetVector(/*glutGet(GLUT_ELAPSED_TIME)*/0.00001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/2.0f))); 			
 		
 	}
 	
@@ -467,7 +441,7 @@ void Init()
       
 
 	// Så vi kan rotera scenen 
-	cam = SetVector(0, 0, 2);
+	cam = SetVector(0, 0, 1);
     	point = SetVector(0, 0, 0);
     	zprInit(&viewMatrix, cam, point);
 	
