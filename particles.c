@@ -62,7 +62,7 @@ GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
 GLuint* vertexArrayObjID, vertexBufferObjID, normalBuffer, normalArray, shader;
 GLuint* tetraArray, tetraNormalArray, tetraVertexBuffer, tetraNormalBuffer, tetraIndexBuffer;
-GLuint* mTriArray, mTriBuffer;
+GLuint* mTriArray, mNormArray, mTriBuffer, mNormBuffer;
 
 //Denna håller reda på hur stort utrymme det allokerade minnet tar. Används till bufferdata
 //int triSize; 
@@ -161,6 +161,7 @@ GLuint tetraIndicies[] =
 };
 
 GLfloat *mTris;
+GLfloat *mNorms;
 
 // Every saint has a past and every sinner has a future
 // Oscar Wilde
@@ -270,8 +271,8 @@ void Display()
 	// Enable Z-buffering
 	glEnable(GL_DEPTH_TEST);
 	// Enable backface culling
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	glUseProgram(shader);
 	
@@ -288,17 +289,19 @@ void Display()
 	{
 		drawTetra(i); 
 	}
-
+	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
 	mat4 rot = ArbRotate(SetVector(1.0, 0.0, 0.0), ang);
-
+	
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
 
-        mTris = March(mTris, tetras); //Här kommer vi att få olika antal trianglar vilket innebär att vi måste kunna allokera en ny mängd minne
-        // VBO for vertex data
-	//printf("%lu, ", sizeof(mTris)/sizeof(mTris[0]));
-        glGenVertexArrays(1, &mTriArray);
-	glBindVertexArray(mTriArray);	
+        March(&mTris, &mNorms,tetras); //Här kommer vi att få olika antal trianglar vilket innebär att vi måste kunna allokera en ny mängd minne
+        // VBO for vertex data	
+	glGenVertexArrays(1, &mTriArray);
+	glBindVertexArray(mTriArray);
+	
+	glGenVertexArrays(1, &mNormArray);
+	glBindVertexArray(mNormArray);
 
 	// Allocate Vertex Buffer Objects	
 	glGenBuffers(1, &mTriBuffer);
@@ -308,8 +311,21 @@ void Display()
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"),
 	3, GL_FLOAT, GL_FALSE, 0, 0);
 
-        glBindVertexArray(mTriArray);      
+	
+	
+
+	// Allocate Vertex Buffer Objects	
+	glGenBuffers(1, &mNormBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, mNormBuffer);
+	glBufferData(GL_ARRAY_BUFFER, triSize, mNorms, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);							//OBS DETTA SKA ANVÄNDAS. ANNARS BLIR DET SÄMST!!!
+	glVertexAttribPointer(glGetAttribLocation(shader, "in_Normal"),
+	3, GL_FLOAT, GL_FALSE, 0, 0);
+	
+        glBindVertexArray(mTriArray); 
+	glBindVertexArray(mNormArray);     
         glDrawArrays(GL_TRIANGLES, 0, (triSize/sizeof(GLfloat)/3));// draw objectperspective
+	
 	glFlush();
 	
 	glutSwapBuffers();
@@ -332,7 +348,10 @@ void Reshape(int h, int w)
 
 void Init()
 {
-	mTris = malloc(0); //Allokera lite minne till vår pointer
+
+	//Allokera lite minne till vår pointer	
+	//mTris = malloc(0); 
+	//mNorms = malloc(0); 
 
 	// GL inits
 	glClearColor(0.1, 0.1, 0.3, 0);
@@ -381,9 +400,6 @@ void Init()
 	glGenVertexArrays(1, &tetraArray);
 	glBindVertexArray(tetraArray);
 
-	glGenVertexArrays(1, &tetraArray);
-	glBindVertexArray(tetraArray);
-
 
 	glGenBuffers(1, &tetraVertexBuffer);
 	glGenBuffers(1, &tetraIndexBuffer);
@@ -409,12 +425,19 @@ void Init()
 	{
 		
 		tetras[i].mass = 0.00001;
+
 		//tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
 		tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
 		//tetras[i].pos = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0022f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0023f * sin(i*(3.14f/2.0f)));
 		//tetras[i].vel = SetVector(0.0001f* (float)i,0.0003f * (float)i,0.0002f * (float)i);
-		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/2.0f))); 	
+		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.00001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/2.0f))); 	
 		//tetras[i].vel = SetVector(0.005f, 0.0f, 0.0f);
+
+		/*tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
+		//tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
+		//tetras[i].vel = SetVector(0.0,0.0,0.0);
+		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.00001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/2.0f))); */	
+
 		
 		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
 		
@@ -422,6 +445,9 @@ void Init()
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
+
+	
+      
 
 	// Så vi kan rotera scenen 
 	cam = SetVector(0, 0, 1);
@@ -454,7 +480,8 @@ void calculateFPS()
  
         //  Set time
         prevTime = currentTime;
- 
+ glGenVertexArrays(1, &normalArray);
+	glBindVertexArray(normalArray);	
         //  Reset frame count
         frameCount = 0;
     }

@@ -24,12 +24,12 @@ I'm MCing at a house party tonight, you coming?
 
 #define kBallSize 0.3
 #define boundRad 0.3
-#define DIM 32
+#define DIM 8
 
 // Antalet tetraedrar
-#define NO_OBJECTS 80
+#define NO_OBJECTS 300
 #define gravity 9.82
-#define threshold 1
+//#define threshold 1
 #define cellSize 2.0/DIM
 
 typedef struct Tetra
@@ -77,7 +77,8 @@ extern int triSize;
 
 extern float XMIN , XMAX , YMIN , YMAX,  ZMIN, ZMAX;
 
-
+//extern GLfloat *mTris;
+//extern GLfloat *mNorms;
 
 //http://paulbourke.net/geometry/polygonise/
 extern int triTable[256][16]; 

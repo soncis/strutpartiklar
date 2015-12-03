@@ -8,7 +8,7 @@ in vec3 exSurface; // Phong (specular)
 void main(void)
 {	
 	
-	vec3 lightPos = vec3(0.0,1.0,2.0);
+	vec3 lightPos = vec3(0.0,2.0,2.0);
 	vec3 Lm = normalize(lightPos - exSurface);  //vector from light to vertex
 	
 	float diffuse = dot(Lm, exNormal);
