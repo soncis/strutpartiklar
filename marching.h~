@@ -17,9 +17,9 @@ I'm MCing at a house party tonight, you coming?
 #define DIM 32
 
 // Antalet tetraedrar
-#define NO_OBJECTS 80
+#define NO_OBJECTS 20
 #define gravity 9.82
-#define threshold 2
+//#define threshold 1
 #define cellSize 2.0/DIM
 
 typedef struct Tetra
@@ -67,7 +67,8 @@ extern int triSize;
 
 extern float XMIN , XMAX , YMIN , YMAX,  ZMIN, ZMAX;
 
-
+//extern GLfloat *mTris;
+//extern GLfloat *mNorms;
 
 //http://paulbourke.net/geometry/polygonise/
 extern int triTable[256][16]; 

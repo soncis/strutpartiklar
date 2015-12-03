@@ -20,17 +20,19 @@ float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.
 
 // öööh.. interpolation? 
 // Half da cube.. can be changed
-float isolevel = 0.5; 
+float isolevel = 1.0; 
 
 // probably not needed or already included
 vec3 p1,p2;
 double valp1,valp2;
 
 
-GLfloat* March(GLfloat *mTris, Tetra *tetras)
+void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 {
 	mc.pos = SetVector(XMIN, YMIN, ZMIN);
 	int i;
+	*mTris = malloc(0);
+	*mNorms = malloc(0);
 	// loop through all cells and calculate number of particles
 	for(i=0; i < DIM*DIM*DIM; i++)
 	{ 
@@ -54,7 +56,7 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 				
 		}
 		
-		if(cell[i].nrParts >= threshold)
+		if(cell[i].nrParts >= isolevel)
 		{
 			// If threshold is reached set state to 1!!!!!!!!!!!	
 			cell[i].state = 1;
@@ -82,7 +84,7 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
         vec3 edge[12];
         int count = 0;
 
-	for(j=0; j<nrCells; j++)
+	for(j=0; j<DIM*DIM*DIM; j++)
         {
                 //detta gör vi för att inte alla hörnpunkter ska få värdet 1
                 for(m=0; m<8; m++)
@@ -274,8 +276,8 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                         tmp = triTable[Case][k];
                         if(tmp != -1)
                         {	
-				GLfloat *temp = realloc(mTris,(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
-				
+				(*mTris) = realloc((*mTris),(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
+				/*
 				if ( temp != NULL ) 
 				{
 					mTris = temp;
@@ -286,13 +288,13 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 					free(mTris);
 					printf("%s", "FFFEEEEEEELL!!!!");				
 				}
-						
+				*/		
 
-                                mTris[count] = edge[tmp].x;
+                                (*mTris)[count] = edge[tmp].x;
                                 count++;
-                                mTris[count] = edge[tmp].y;
+                                (*mTris)[count] = edge[tmp].y;
                                 count++;                                
-                                mTris[count] = edge[tmp].z;
+                                (*mTris)[count] = edge[tmp].z;
                                 count++;
                         }
 			else
@@ -302,30 +304,64 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 		
 	}
 	
-	//Ge triSize storleken på det allokerade minnet
-	triSize = (count) * sizeof(GLfloat); 
-	return mTris;
-	//printf("%i", triSize);
-}	
+	int normalCount = 0;
+	vec3 normal, u, v, v1, v2;
 
+	(*mNorms) = realloc((*mNorms),count * sizeof(GLfloat));
+
+	while(normalCount < count){
+		v1 = SetVector((*mTris)[normalCount], (*mTris)[normalCount+1], (*mTris)[normalCount+2]);
+		v2 = SetVector((*mTris)[normalCount+3], (*mTris)[normalCount+4], (*mTris)[normalCount+5]);
+		u = Normalize(VectorSub(v2, v1));
+		
+		v2 = SetVector((*mTris)[normalCount+6], (*mTris)[normalCount+7], (*mTris)[normalCount+8]);
+		v = Normalize(VectorSub(v2, v1));
+
+		normal = Normalize(CrossProduct(u, v));
+		
+		(*mNorms)[normalCount] = normal.x;
+		(*mNorms)[normalCount+1] = normal.y;
+		(*mNorms)[normalCount+2] = normal.z;
+
+		(*mNorms)[normalCount+3] = normal.x;
+		(*mNorms)[normalCount+4] = normal.y;
+		(*mNorms)[normalCount+5] = normal.z;
+
+		(*mNorms)[normalCount+6] = normal.x;
+		(*mNorms)[normalCount+7] = normal.y;
+		(*mNorms)[normalCount+8] = normal.z;	
+		printf("%f, ", (*mNorms)[normalCount]);
+		printf("%f, ", (*mNorms)[normalCount+1]);
+		printf("%f, ", (*mNorms)[normalCount+2]);
+		printf("%s", "\n");
+		normalCount+=9;
+	}
+	//Ge triSize storleken på det allokerade minnet
+	triSize = count * sizeof(GLfloat); 
+	//return mTris;
+	//printf("%i, ", triSize);
+}	
+//http://www.paulbourke.net/geometry/polygonise/
 // Linear interpolation 
-vec3 interpolate(vec3 p1, vec3 p2, double valp1, double valp2)
+vec3 interpolate(vec3 p1, vec3 p2, double valP1, double valP2)
 {
+	//Point to be calculated
 	vec3 p; 
 	double mu;
  
-
-	if (abs(isolevel-valp1) < 0.00001)
-		return(p1);
-	
-	if (abs(isolevel-valp2) < 0.00001)
+	//If the value of point 1 is the same as the isovalue
+	if (abs(isolevel-valP1) < 0.00001)   
+		return(p1);  
+	//If the value of point 2 is the same as the isovalue
+	if (abs(isolevel-valP2) < 0.00001)  
 		return(p2);
 	
-	if (abs(valp1-valp2) < 0.00001)
+	if (abs(valp1-valP2) < 0.00001)
 		return(p1);
+	//Calculate weight
+	mu = (isolevel - valP1) / (valP2 - valP1); 
 
-	mu = (isolevel - valp1) / (valp2 - valp1);
-
+	//Will depend on if the weighting is in x, y or z
 	p.x = p1.x + mu * (p2.x - p1.x);
 	p.y = p1.y + mu * (p2.y - p1.y);
 	p.z = p1.z + mu * (p2.z - p1.z);
