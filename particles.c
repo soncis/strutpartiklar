@@ -400,11 +400,11 @@ void Init()
 		
 		tetras[i].mass = 0.00001;
 		//tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
-		//tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
-		tetras[i].pos = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0022f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0023f * sin(i*(3.14f/2.0f)));
+		tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
+		//tetras[i].pos = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0022f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0023f * sin(i*(3.14f/2.0f)));
 		//tetras[i].vel = SetVector(0.0001f* (float)i,0.0003f * (float)i,0.0002f * (float)i);
-		//tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/2.0f))); 	
-		tetras[i].vel = SetVector(0.005f, 0.0f, 0.0f);
+		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/2.0f))); 	
+		//tetras[i].vel = SetVector(0.005f, 0.0f, 0.0f);
 		
 		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
 		
