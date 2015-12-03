@@ -14,13 +14,13 @@ I'm MCing at a house party tonight, you coming?
 
 #define kBallSize 0.3
 #define boundRad 0.3
-#define cellSize 1.0
+#define DIM 32
+
 // Antalet tetraedrar
-#define NO_OBJECTS 1
+#define NO_OBJECTS 80
 #define gravity 9.82
 #define threshold 1
-#define nrCells 8
-#define DIM 2
+#define cellSize 2.0/DIM
 
 typedef struct Tetra
 {
@@ -73,6 +73,12 @@ extern float XMIN , XMAX , YMIN , YMAX,  ZMIN, ZMAX;
 extern int triTable[256][16]; 
 
 
-Cell cell[nrCells];
+Cell cell[DIM*DIM*DIM];
+
+
 int cubeCorners[8];
+
+// Densitet
+float density[24]; 
+
 MCube mc;

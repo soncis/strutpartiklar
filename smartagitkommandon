@@ -11,7 +11,6 @@ git pull origin master
 // Testa att koden funkar!
 
 
-
 git merge din lokala branch
 
 git commit -am "struta hårt"

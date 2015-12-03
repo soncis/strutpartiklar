@@ -1,6 +1,16 @@
+/*
+	Marching Gangster cubes
+	TSBK03
+	Linköpings tekniska högskola
+	Rövargänget:
+	Gustav "Gubbsatan" Hallström
+	Sebastian "Legolas" Alfredsson
+	Viktor "Täbybronks" Kraft
+*/
+
+
 // OpenGL 3 conversion 2013.
 //gcc particles.c marching.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
-
 
 
 //#include <stdlib.h>
@@ -38,15 +48,14 @@
 #include "marching.h"
 
 
-#define kBallSize 0.3
 #define boundRad 0.3
-#define cellSize 1.0
+//#define cellSize 1.0
 // Antalet tetraedrar
-#define NO_OBJECTS 1
+//#define NO_OBJECTS 100
 #define gravity 9.82
-#define threshold 1
-#define nrCells 8
-#define DIM 2
+//#define threshold 1
+//#define nrCells 8
+//#define DIM 2
 
 GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
@@ -153,6 +162,8 @@ GLuint tetraIndicies[] =
 
 GLfloat *mTris;
 
+// Every saint has a past and every sinner has a future
+// Oscar Wilde
 
 void calcBounce(int nr){
 	vec3 normal = SetVector(0,0,0);
@@ -203,7 +214,7 @@ void drawTetra(int nr)
     	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, tmpMatrix.m);
 	
 	// Rita ut tetraeder? 
-	glBindVertexArray(tetraArray);
+	//glBindVertexArray(tetraArray);
 	//glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
 }
 
@@ -238,10 +249,6 @@ GLfloat tetraNormals[] =
 	//back
 	0.58f, 0.58f, -0.58f        
 };
-
-
-
-
 //Some cause happiness wherever they go; others whenever they go.
 // Oscar Wilde 
 
@@ -267,10 +274,6 @@ void Display()
 	//glCullFace(GL_BACK);
 
 	glUseProgram(shader);
-
-	//viewMatrix = lookAt(0,  3,  3,  0,  0,  0,  0,  1,  0);
-	
-	//glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
 	
 	
 	glBindVertexArray(vertexArrayObjID);
@@ -286,22 +289,14 @@ void Display()
 		drawTetra(i); 
 	}
 
-	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
 	mat4 rot = ArbRotate(SetVector(1.0, 0.0, 0.0), ang);
 
-	// Skapar en okontrollerbar rotation
-	// bortkommenterad för stunden	
-	//viewMatrix = Mult(viewMatrix, rot);
-
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
-        
-        //KANSKE FEL!!!/////////////////////////////////////////////////////////////////////////////////
+
         mTris = March(mTris, tetras); //Här kommer vi att få olika antal trianglar vilket innebär att vi måste kunna allokera en ny mängd minne
         // VBO for vertex data
 	//printf("%lu, ", sizeof(mTris)/sizeof(mTris[0]));
-	/////////////////////////////////////////////////////////////////////////////////////////////
-        // Detta kan bli väldigt fel 
         glGenVertexArrays(1, &mTriArray);
 	glBindVertexArray(mTriArray);	
 
@@ -315,7 +310,6 @@ void Display()
 
         glBindVertexArray(mTriArray);      
         glDrawArrays(GL_TRIANGLES, 0, (triSize/sizeof(GLfloat)/3));// draw objectperspective
-	//printf("%lu \n", (triSize/sizeof(GLfloat)/3));
 	glFlush();
 	
 	glutSwapBuffers();
@@ -415,8 +409,12 @@ void Init()
 	{
 		
 		tetras[i].mass = 0.00001;
-		tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f, -0.5f);
-		tetras[i].vel = SetVector(0.02f,0.01f,0.03f); 	
+		//tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
+		tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
+		//tetras[i].pos = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0022f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0023f * sin(i*(3.14f/2.0f)));
+		//tetras[i].vel = SetVector(0.0001f* (float)i,0.0003f * (float)i,0.0002f * (float)i);
+		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/2.0f))); 	
+		//tetras[i].vel = SetVector(0.005f, 0.0f, 0.0f);
 		
 		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
 		
@@ -425,12 +423,8 @@ void Init()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 
-        
-	
-	//viewMatrix = lookAt(0,  3,  3,  0,  0,  0,  0,  1,  0);
-
 	// Så vi kan rotera scenen 
-	cam = SetVector(0, 0, 5);
+	cam = SetVector(0, 0, 1);
     	point = SetVector(0, 0, 0);
     	zprInit(&viewMatrix, cam, point);
 	

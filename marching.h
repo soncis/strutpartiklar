@@ -1,3 +1,13 @@
+/*
+	Marching Gangster cubes
+	TSBK03
+	Linköpings tekniska högskola
+	Rövargänget:
+	Gustav "Gubbsatan" Hallström
+	Sebastian "Legolas" Alfredsson
+	Viktor "Täbybronks" Kraft
+*/
+
 /* www.urbandictionary.com/define.php?term=MC
 MC
 Short for master of ceremonies or mic controller. Essentially a word for a rapper but the term is not limited to hip hop. Drum and Bass, Garage, Happy Hardcore, Ragga and old school rave all feature MCs, however with these genres, the MC generally MCs live while a DJ mixes the tunes, whereas hip hop MCs mainly do so on record
@@ -14,13 +24,13 @@ I'm MCing at a house party tonight, you coming?
 
 #define kBallSize 0.3
 #define boundRad 0.3
-#define cellSize 1.0
+#define DIM 32
+
 // Antalet tetraedrar
-#define NO_OBJECTS 1
+#define NO_OBJECTS 80
 #define gravity 9.82
 #define threshold 1
-#define nrCells 8
-#define DIM 2
+#define cellSize 2.0/DIM
 
 typedef struct Tetra
 {
@@ -73,6 +83,12 @@ extern float XMIN , XMAX , YMIN , YMAX,  ZMIN, ZMAX;
 extern int triTable[256][16]; 
 
 
-Cell cell[nrCells];
+Cell cell[DIM*DIM*DIM];
+
+
 int cubeCorners[8];
+
+// Densitet
+float density[24]; 
+
 MCube mc;
