@@ -74,5 +74,11 @@ extern int triTable[256][16];
 
 
 Cell cell[DIM*DIM*DIM];
+
+
 int cubeCorners[8];
+
+// Densitet
+float density[24]; 
+
 MCube mc;
