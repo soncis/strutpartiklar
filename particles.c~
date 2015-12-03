@@ -2,44 +2,6 @@
 //gcc particles.c marching.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
 
 
-/* 	// Interpolation i marching cubes...
-
-	http://www3.cs.stonybrook.edu/~mueller/teaching/cse564/marchingCubes.pdf
-	
-	iso = isovalue
-	u = distance between corner and interpolated point (typ.. avstandet mellan hornet och där triangelns horn är.) 
-	v1, v2 = obtained by central differencing https://en.wikipedia.org/wiki/Central_differencing_scheme  
-	g1, g2 = gradient vectors	
-
-
-	iso = v1 * ( 1 - u ) + v2 * u
-	u = (v1 - iso) / (v1 - v2)
-
-	interpolate vertex color:
-	
-	c1 = u * c2 + ( 1 - u ) * c1
-
-	interpolate vertex normal: 
-
-	n1 = u * g2 + ( 1 - u ) * g1
-
-	// Remove Ambiguities Using the Asymptotic Decider Method 
-	// ??????????????????????????????????????????????????????	
-
-	Salpha = (B00 - B01) / (B00 + B11 - B01 - B10)
-	Talpha = (B00 - B01) / (B00 + B11 - B01 - B10)
-
-	- a surface created by bilinear interpolation
-
-	function (1-s, s) [B00, B01; B10, B11] (1-t, t)
-
-	Give rise to 2 hypoerbolas B(s,t) = alpha (isovalue) 
-
-	-Ambiguity: both hyperbolas intersect domain (0,0) and (1,1)
-
-	-Resolve ambiguity by comparing B(Salpha, Talpha) with alpha 
-
-*/
 
 //#include <stdlib.h>
 
@@ -76,15 +38,14 @@
 #include "marching.h"
 
 
-#define kBallSize 0.3
 #define boundRad 0.3
-#define cellSize 1.0
+//#define cellSize 1.0
 // Antalet tetraedrar
-#define NO_OBJECTS 1
+//#define NO_OBJECTS 100
 #define gravity 9.82
-#define threshold 1
-#define nrCells 8
-#define DIM 2
+//#define threshold 1
+//#define nrCells 8
+//#define DIM 2
 
 GLuint* vertexArrayObjID, vertexBufferObjID, shader;
 
@@ -241,7 +202,7 @@ void drawTetra(int nr)
     	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, tmpMatrix.m);
 	
 	// Rita ut tetraeder? 
-	glBindVertexArray(tetraArray);
+	//glBindVertexArray(tetraArray);
 	//glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
 }
 
@@ -276,10 +237,6 @@ GLfloat tetraNormals[] =
 	//back
 	0.58f, 0.58f, -0.58f        
 };
-
-
-
-
 //Some cause happiness wherever they go; others whenever they go.
 // Oscar Wilde 
 
@@ -305,10 +262,6 @@ void Display()
 	//glCullFace(GL_BACK);
 
 	glUseProgram(shader);
-
-	//viewMatrix = lookAt(0,  3,  3,  0,  0,  0,  0,  1,  0);
-	
-	//glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
 	
 	
 	glBindVertexArray(vertexArrayObjID);
@@ -324,22 +277,14 @@ void Display()
 		drawTetra(i); 
 	}
 
-	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
 	mat4 rot = ArbRotate(SetVector(1.0, 0.0, 0.0), ang);
 
-	// Skapar en okontrollerbar rotation
-	// bortkommenterad för stunden	
-	//viewMatrix = Mult(viewMatrix, rot);
-
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
-        
-        //KANSKE FEL!!!/////////////////////////////////////////////////////////////////////////////////
+
         mTris = March(mTris, tetras); //Här kommer vi att få olika antal trianglar vilket innebär att vi måste kunna allokera en ny mängd minne
         // VBO for vertex data
 	//printf("%lu, ", sizeof(mTris)/sizeof(mTris[0]));
-	/////////////////////////////////////////////////////////////////////////////////////////////
-        // Detta kan bli väldigt fel 
         glGenVertexArrays(1, &mTriArray);
 	glBindVertexArray(mTriArray);	
 
@@ -353,7 +298,6 @@ void Display()
 
         glBindVertexArray(mTriArray);      
         glDrawArrays(GL_TRIANGLES, 0, (triSize/sizeof(GLfloat)/3));// draw objectperspective
-	//printf("%lu \n", (triSize/sizeof(GLfloat)/3));
 	glFlush();
 	
 	glutSwapBuffers();
@@ -453,8 +397,10 @@ void Init()
 	{
 		
 		tetras[i].mass = 0.00001;
-		tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f, -0.5f);
-		tetras[i].vel = SetVector(0.02f,0.01f,0.03f); 	
+		//tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
+		tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
+		//tetras[i].vel = SetVector(0.0001f* (float)i,0.0003f * (float)i,0.0002f * (float)i);
+		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0001f * sin(i*(3.14f/2.0f))); 	
 		
 		//tetras[i].pos.y -= gravity * GLUT_ELAPSED_TIME * tetras[i].mass;		
 		
@@ -463,12 +409,8 @@ void Init()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 
-        
-	
-	//viewMatrix = lookAt(0,  3,  3,  0,  0,  0,  0,  1,  0);
-
 	// Så vi kan rotera scenen 
-	cam = SetVector(0, 0, 5);
+	cam = SetVector(0, 0, 2);
     	point = SetVector(0, 0, 0);
     	zprInit(&viewMatrix, cam, point);
 	

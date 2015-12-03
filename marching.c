@@ -20,7 +20,8 @@ float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.
 
 // öööh.. interpolation? 
 // Half da cube.. can be changed
-float isolevel = 0.5; 
+float isolevel = 0.5;
+ 
 
 // probably not needed or already included
 vec3 p1,p2;
@@ -32,12 +33,12 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 	mc.pos = SetVector(XMIN, YMIN, ZMIN);
 	int i;
 	// loop through all cells and calculate number of particles
-	for(i=0; i < nrCells; i++)
+	for(i=0; i < DIM*DIM*DIM; i++)
 	{ 
 		cell[i].nrParts = 0;
 		cell[i].state = 0;
 		int j;		
-		for(j=0; j<NO_OBJECTS; j++)
+		for(j=0; j < NO_OBJECTS; j++)
 		{
 			// Check if particle is inside this cell
 			//OBS! Will now register both cells on cell border
@@ -54,7 +55,7 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 				
 		}
 		
-		if(cell[i].nrParts >= threshold)
+		if(cell[i].nrParts >= isolevel)
 		{
 			// If threshold is reached set state to 1!!!!!!!!!!!	
 			cell[i].state = 1;
@@ -82,18 +83,18 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
         vec3 edge[12];
         int count = 0;
 
-	for(j=0; j<nrCells; j++)
+	for(j=0; j< DIM * DIM * DIM; j++)
         {
                 //detta gör vi för att inte alla hörnpunkter ska få värdet 1
                 for(m=0; m<8; m++)
                         cubeCorners[m] = 0;
                 x++;
-                if(x==DIM)
+                if(x == DIM)
                 {
                         y++;
                         x=0;
                 }
-                if(y==DIM)
+                if(y == DIM)
                 {
                         z++;
                         x=y=0;
@@ -115,7 +116,8 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                         cubeCorners[5] = 32;
                         cubeCorners[6] = 64;
                 }
-                if(y!=0 && cell[j-DIM].state == 1){
+                if(y!=0 && cell[j-DIM].state == 1)
+		{
                         cubeCorners[0] = 1;
                         cubeCorners[1] = 2;
                         cubeCorners[2] = 4;     
@@ -128,7 +130,8 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                         cubeCorners[6] = 64;
                         cubeCorners[7] = 128;
                 }
-                if(z!=0 && cell[j-DIM*DIM].state == 1){
+                if(z!=0 && cell[j-DIM*DIM].state == 1)
+		{
                         cubeCorners[0] = 1;
                         cubeCorners[1] = 2;
                         cubeCorners[4] = 16;
@@ -246,10 +249,32 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                         Case += cubeCorners[k];
                 }
 
+		
                 //vart ligger edgesen i världen
 
+		// Ersätta detta med en loop ? 
+		
+		edge[0] = SetVector( interpolate(x,y,z).x -(-1.0f+x*cellSize), -1.0f+y*cellSize, -1.0f+z*cellSize);
+                edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, interpolate(x,y,z).z - (-1.0f+z*cellSize);
+                edge[2] = SetVector(-1.0f+x*cellSize + interpolate(x,y,z), -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
+                edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+ interpolate(x,y,z));
+                
+		//toppen av cuben
+                edge[4] = SetVector(-1.0f+x*cellSize + interpolate(x,y,z), -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
+                edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize + interpolate(x,y,z));
+                edge[6] = SetVector(-1.0f+x*cellSize + interpolate(x,y,z), -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
+                edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize + interpolate(x,y,z));
+                
+		//sidorna av cuben
+                edge[8] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize + interpolate(x,y,z), -1.0f+z*cellSize);
+                edge[9] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize + interpolate(x,y,z), -1.0f+z*cellSize);
+                edge[10] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+ interpolate(x,y,z) , -1.0f+(z+1)*cellSize);
+                edge[11] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize + interpolate(x,y,z), -1.0f+(z+1)*cellSize); 
+
+
                 //botten av cuben
-                edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
+        	/* Backup       
+		edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
                 edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
                 edge[2] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
                 edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
@@ -265,7 +290,8 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                 edge[9] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
                 edge[10] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
                 edge[11] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
-                
+                */
+
                 //hämta vilket case
                 int tmp;
                 
@@ -309,26 +335,25 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 }	
 
 // Linear interpolation 
-vec3 interpolate(vec3 p1, vec3 p2, double valp1, double valp2)
+float interpolate(float p1, float p2, float valP1, float valP2)
 {
-	vec3 p; 
-	double mu;
+	float p; 
+	float mu;
  
 
-	if (abs(isolevel-valp1) < 0.00001)
+	if (abs(isolevel-valP1) < 0.00001)
 		return(p1);
 	
-	if (abs(isolevel-valp2) < 0.00001)
+	if (abs(isolevel-valP2) < 0.00001)
 		return(p2);
-	
-	if (abs(valp1-valp2) < 0.00001)
+	 
+	if (abs(valp1-valP2) < 0.00001)
 		return(p1);
 
-	mu = (isolevel - valp1) / (valp2 - valp1);
+	mu = (isolevel - valP1) / (valP2 - valP1);
 
-	p.x = p1.x + mu * (p2.x - p1.x);
-	p.y = p1.y + mu * (p2.y - p1.y);
-	p.z = p1.z + mu * (p2.z - p1.z);
+	p = p1 + mu * (p2 - p1);
+	
 
 	return p; 
 
@@ -633,8 +658,3 @@ int triTable[256][16] =
 {0, 9, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
-
-
-// Every saint has a past and every sinner has a future
-// Oscar Wilde
-
