@@ -414,7 +414,7 @@ void Init()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(tetraIndicies), tetraIndicies, GL_STATIC_DRAW);
 
 	// Så vi kan rotera scenen 
-	cam = SetVector(0, 0, 2);
+	cam = SetVector(0, 0, 1);
     	point = SetVector(0, 0, 0);
     	zprInit(&viewMatrix, cam, point);
 	
