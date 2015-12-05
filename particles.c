@@ -72,7 +72,7 @@ Point3D cam, point;
 mat4 projectionMatrix;
 mat4 viewMatrix, vm2;
 mat4 tmpMatrix; 
-float X1 = -1.0f, X2 = 1.0f, Y1 = -1.0f, Y2=1.0f,  Z1 = -1.0f, Z2=1.0f;
+float X1 = -0.7f, X2 = 0.7f, Y1 = -0.7f, Y2=0.7f,  Z1 = -0.7f, Z2=0.7f;
 
 // Array med alla tetras som ska ritas upp 
 // Glöm inte ändra denna med
@@ -140,10 +140,10 @@ GLfloat normals[] =
 //regular (1,1,1), (1,−1,−1), (−1,1,−1), (−1,−1,1)
 GLfloat tetraVertices[] = 
 {
-        -0.1f, -0.1f, 0.1f,
-        0.1f, 0.1f, 0.1f,
-        -0.1f, 0.1f, -0.1f,
-	0.1f, -0.1f, -0.1f
+        -0.01f, -0.01f, 0.01f,
+        0.01f, 0.01f, 0.01f,
+        -0.01f, 0.01f, -0.01f,
+	0.01f, -0.01f, -0.01f
         
 };
 
@@ -190,6 +190,7 @@ void calcBounce(int nr){
 	{
 		normal = SetVector(0.0f,1.0f,0.0f);
 		tetras[nr].vel = VectorSub(tetras[nr].vel, ScalarMult(normal, 2.0f*DotProduct(tetras[nr].vel, normal)));
+		//tetras[nr].vel.y = 0.0f;
 	}
 	
 	if(tetras[nr].pos.z >= Z2)
@@ -208,12 +209,13 @@ void calcBounce(int nr){
 
 void drawTetra(int nr)
 {
-	calcBounce(nr);
+	
 	tetras[nr].pos = VectorAdd(tetras[nr].pos, tetras[nr].vel);
+	calcBounce(nr);
+	
 	tmpMatrix = T(tetras[nr].pos.x, tetras[nr].pos.y, tetras[nr].pos.z); // position
 	tmpMatrix = Mult(viewMatrix, tmpMatrix);
     	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, tmpMatrix.m);
-	
 	// Rita ut tetraeder? 
 	//glBindVertexArray(tetraArray);
 	//glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
@@ -258,7 +260,7 @@ GLfloat tetraNormals[] =
 void Display()
 {
 	char buf[100] = {0};
-	snprintf(buf, 100, "Sreums strutpartiklar, FPS : %.1f", FPS);
+	snprintf(buf, 100, "Serums strutpartiklar, FPS : %.1f", FPS);
 
 	glutSetWindowTitle(buf);	
 	
@@ -268,21 +270,19 @@ void Display()
 	glClearColor(0.1, 0.1, 0.3, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Enable Z-buffering
 	glEnable(GL_DEPTH_TEST);
-	// Enable backface culling
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+
+	
 
 	glUseProgram(shader);
 	
-	
+	/*
 	glBindVertexArray(vertexArrayObjID);
 	glBindVertexArray(normalArray);
 
 	// Rita ut planet	
 	glDrawArrays(GL_TRIANGLES, 0, 12);// draw objectperspective
-
+	*/
 	int i; 
 	// Rita ut tetraeder
 	for(i = 0; i < NO_OBJECTS; i++) 
@@ -292,9 +292,10 @@ void Display()
 	
 	GLfloat ang = 0.001f * glutGet(GLUT_ELAPSED_TIME);
 	mat4 rot = ArbRotate(SetVector(1.0, 0.0, 0.0), ang);
-	
+	projectionMatrix = perspective(90, 1.0, 0.1, 1000); // It would be silly to upload an uninitialized matrix
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
-
+	
         March(&mTris, &mNorms,tetras); //Här kommer vi att få olika antal trianglar vilket innebär att vi måste kunna allokera en ny mängd minne
         // VBO for vertex data	
 	glGenVertexArrays(1, &mTriArray);
@@ -311,9 +312,6 @@ void Display()
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Position"),
 	3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	
-	
-
 	// Allocate Vertex Buffer Objects	
 	glGenBuffers(1, &mNormBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mNormBuffer);
@@ -326,7 +324,7 @@ void Display()
 	glBindVertexArray(mNormArray);     
         glDrawArrays(GL_TRIANGLES, 0, (triSize/sizeof(GLfloat)/3));// draw objectperspective
 	
-	glFlush();
+	//glFlush();
 	
 	glutSwapBuffers();
 }
@@ -341,7 +339,7 @@ void Reshape(int h, int w)
 {
 	glViewport(0, 0, w, h);
     	GLfloat ratio = (GLfloat) w / (GLfloat) h;
-   	projectionMatrix = perspective(90, ratio, 0.1, 1000);
+   	projectionMatrix = perspective(90, 1.0, 0.1, 1000);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 }
 
@@ -349,23 +347,22 @@ void Reshape(int h, int w)
 void Init()
 {
 
-	//Allokera lite minne till vår pointer	
-	//mTris = malloc(0); 
-	//mNorms = malloc(0); 
-
 	// GL inits
-	glClearColor(0.1, 0.1, 0.3, 0);
-	glClearDepth(1.0);
+	//glClearColor(0.1, 0.1, 0.3, 0);
+	//glClearDepth(1.0);
+	
 	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	printError("GL inits");
+	// Enable backface culling
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glDepthFunc(GL_LEQUAL);
 
 	shader = loadShaders("shader.vert", "shader.frag");
 	
 	glUseProgram(shader);
-	projectionMatrix = perspective(90, 1.0, 0.1, 1000); // It would be silly to upload an uninitialized matrix
+	/*projectionMatrix = perspective(90, 1.0, 0.1, 1000); // It would be silly to upload an uninitialized matrix
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);*/
 	
 	//Eazy E boyz in the hood
 	printError("init shader");
@@ -426,12 +423,16 @@ void Init()
 		
 		tetras[i].mass = 0.00001;
 
-		//tetras[i].pos = SetVector(-0.9 + 0.01 * (float)i, -0.5f + 0.01 * (float)i, -0.5f + 0.01 * (float)i);
-		tetras[i].pos = SetVector(0.0f, 0.0f, 0.0f);
-		//tetras[i].pos = SetVector(glutGet(GLUT_ELAPSED_TIME)*0.0022f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.0023f * sin(i*(3.14f/2.0f)));
-		//tetras[i].vel = SetVector(0.0001f* (float)i,0.0003f * (float)i,0.0002f * (float)i);
-		tetras[i].vel = SetVector(/*glutGet(GLUT_ELAPSED_TIME)*/0.00001f* sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00001f * sin(i*(3.14f/2.0f))); 			
+		tetras[i].pos = SetVector(-0.6 + 0.0005 * (float)i, -0.5f + 0.0001 * (float)i, -0.5f + 0.0001 * (float)i);
 		
+		//tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME) * 0.00001f * sin(i*(3.14f/8.0f)),tetras[i].mass * -982.0f ,glutGet(GLUT_ELAPSED_TIME)*0.00003f * sin(i*(3.14f/2.0f))); 		
+		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME) * 0.00001f * sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00003f * sin(i*(3.14f/2.0f))); 		
+
+		
+		//tetras[i].pos = SetVector(0.0f,0.0f, 0.0f);
+		//tetras[i].vel = SetVector(0.0f,0.0f,0.0f);
+					
+	
 	}
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tetraIndexBuffer);
@@ -441,7 +442,7 @@ void Init()
       
 
 	// Så vi kan rotera scenen 
-	cam = SetVector(0, 0, 1);
+	cam = SetVector(0, 0, 2);
     	point = SetVector(0, 0, 0);
     	zprInit(&viewMatrix, cam, point);
 	
@@ -526,7 +527,7 @@ int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(600, 600);
 	
 	glutInitContextVersion(3, 2);

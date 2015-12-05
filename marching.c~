@@ -1,3 +1,13 @@
+/*
+	Marching Gangster cubes
+	TSBK03
+	Linköpings tekniska högskola
+	Rövargänget:
+	Gustav "Gubbsatan" Hallström
+	Sebastian "Legolas" Alfredsson
+	Viktor "Täbybronks" Kraft
+*/
+
 /* www.urbandictionary.com/define.php?term=MC
 MC
 Short for master of ceremonies or mic controller. Essentially a word for a rapper but the term is not limited to hip hop. Drum and Bass, Garage, Happy Hardcore, Ragga and old school rave all feature MCs, however with these genres, the MC generally MCs live while a DJ mixes the tunes, whereas hip hop MCs mainly do so on record
@@ -18,37 +28,87 @@ I'm MCing at a house party tonight, you coming?
 int triSize;
 float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
 
-// öööh.. interpolation? 
-// Half da cube.. can be changed
-float isolevel = 1.0; 
 
 // probably not needed or already included
 vec3 p1,p2;
 double valp1,valp2;
+/*
+	Compare two vectors and check if they are the same
+*/
+int compareVectors(vec3 a, vec3 b){
+	if(Norm(VectorSub(a,b)) < 0.00001){		
+		return 1;
+	}
+	return 0;
+}
+
+/*
+	return index for a position if it exists, otherwise return -1
+*/
+int vertIndex(vec3 v){
+	int i, index=-1;	
+	for(i=0; i<vertListSize; i++){
+		if(compareVectors(verts[i].position, v) == 1){
+			index = i;
+			//break; 
+		}
+	}
+	return index;
+}
+
+// Linear interpolation 
+float interpolate(float p1, float p2, float valP1, float valP2)
+{
+	float p; 
+	float mu;
+ 
+
+	if (abs(isolevel-valP1) < 1.0f)
+		return(p1);
+	
+	if (abs(isolevel-valP2) < 1.0f)
+		return(p2);
+	 
+	if (abs(valp1-valP2) < 1.0f)
+		return(p1);
+
+	mu = (isolevel - valP1) / (valP2 - valP1);
+
+	p = p1 + mu * (p2 - p1);
+	
+
+	return p; 
+
+}
 
 
 void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 {
 	mc.pos = SetVector(XMIN, YMIN, ZMIN);
 	int i;
+	free(*mTris);
+	free(*mNorms);
 	*mTris = malloc(0);
 	*mNorms = malloc(0);
+	free(verts);
+	verts = malloc(0);
+	vertListSize = 0;
 	// loop through all cells and calculate number of particles
-	for(i=0; i < DIM*DIM*DIM; i++)
+	for(i = 0; i < DIM*DIM*DIM; i++)
 	{ 
 		cell[i].nrParts = 0;
 		cell[i].state = 0;
 		int j;		
-		for(j=0; j<NO_OBJECTS; j++)
+		for(j = 0; j < NO_OBJECTS; j++)
 		{
 			// Check if particle is inside this cell
-			//OBS! Will now register both cells on cell border
+			//OBS! Will NOT register both cells on cell border
 			if(tetras[j].pos.x >= mc.pos.x 
-			&& tetras[j].pos.x <= (mc.pos.x + cellSize) 
+			&& tetras[j].pos.x < (mc.pos.x + cellSize) 
 			&& tetras[j].pos.y >= mc.pos.y 
-			&& tetras[j].pos.y <= (mc.pos.y + cellSize)
+			&& tetras[j].pos.y < (mc.pos.y + cellSize)
 			&& tetras[j].pos.z >= mc.pos.z 
-			&& tetras[j].pos.z <= (mc.pos.z + cellSize))
+			&& tetras[j].pos.z < (mc.pos.z + cellSize))
 			{
 				// If particle is inside cell add to this cells particle count
 				cell[i].nrParts++;	
@@ -63,7 +123,7 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 		}
 		/*
 		Step through cells using the position and check against the borders.
-		When XMAX position is used, step up in y direction and reset xpos.
+		When XMAX position is reached, step up in y direction and reset xpos.
 		*/
 		mc.pos.x += cellSize;
 		if(mc.pos.x == XMAX)
@@ -84,160 +144,296 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
         vec3 edge[12];
         int count = 0;
 
-	for(j=0; j<DIM*DIM*DIM; j++)
+	for(j=0; j< DIM * DIM * DIM; j++)
         {
                 //detta gör vi för att inte alla hörnpunkter ska få värdet 1
                 for(m=0; m<8; m++)
                         cubeCorners[m] = 0;
                 x++;
-                if(x==DIM)
+                if(x == DIM)
                 {
                         y++;
                         x=0;
                 }
-                if(y==DIM)
+                if(y == DIM)
                 {
                         z++;
                         x=y=0;
                 }
                 
+		// nollställ density
+		for(m = 0; m < 24; m++)
+			density[m] = 0; 
+
                 //Kolla mot kuber som ligger "vägg i vägg" med vår kub
-                
+                // Kolla även denstiy så den får rätt antal partiklar mot varje hörn
 		if(x!=0 && cell[j-1].state == 1)
                 {
 			cubeCorners[0] = 1;
+			density[0] += cell[j-1].nrParts;
+
                         cubeCorners[3] = 8;
+			density[9] += cell[j-1].nrParts;
+
                         cubeCorners[4] = 16;
+			density[12] += cell[j-1].nrParts;
+
                         cubeCorners[7] = 128;
+			density[21] += cell[j-1].nrParts;
 		}
                 if(x!=DIM-1 && cell[j+1].state == 1)
                 {
                         cubeCorners[1] = 2;
+			density[3] += cell[j+1].nrParts;
+
                         cubeCorners[2] = 4;
+			density[6] += cell[j+1].nrParts;		
+	
                         cubeCorners[5] = 32;
+			density[15] += cell[j+1].nrParts;
+
                         cubeCorners[6] = 64;
+			density[18] += cell[j+1].nrParts;
                 }
-                if(y!=0 && cell[j-DIM].state == 1){
+                if(y!=0 && cell[j-DIM].state == 1)
+		{
                         cubeCorners[0] = 1;
+			density[1] += cell[j-DIM].nrParts;
+
                         cubeCorners[1] = 2;
-                        cubeCorners[2] = 4;     
-                        cubeCorners[3] = 8;
+			density[4] += cell[j-DIM].nrParts;
+
+                        cubeCorners[2] = 4;
+			density[7] += cell[j-DIM].nrParts;     
+                        
+			cubeCorners[3] = 8;
+			density[10] += cell[j-DIM].nrParts;
                 }
                 if(y!=DIM-1 && cell[j+DIM].state == 1)
                 {
                         cubeCorners[4] = 16;
+			density[13] += cell[j+DIM].nrParts;
+
                         cubeCorners[5] = 32;
+			density[16] += cell[j+DIM].nrParts;
+
                         cubeCorners[6] = 64;
+			density[19] += cell[j+DIM].nrParts;
+
                         cubeCorners[7] = 128;
+			density[22] += cell[j+DIM].nrParts;
                 }
-                if(z!=0 && cell[j-DIM*DIM].state == 1){
+                if(z!=0 && cell[j-DIM*DIM].state == 1)
+		{
                         cubeCorners[0] = 1;
+			density[2] += cell[j-DIM*DIM].nrParts;
+
                         cubeCorners[1] = 2;
+			density[5] += cell[j-DIM*DIM].nrParts;
+
                         cubeCorners[4] = 16;
+			density[14] += cell[j-DIM*DIM].nrParts;
+
                         cubeCorners[5] = 32;
+			density[17] += cell[j-DIM*DIM].nrParts;
                 }       
                 if(z!=DIM-1 && cell[j+DIM*DIM].state == 1)
                 {
-                        cubeCorners[2] = 4;     
+                        cubeCorners[2] = 4;
+			density[8] += cell[j+DIM*DIM].nrParts;
+     
                         cubeCorners[3] = 8;
+			density[11] += cell[j+DIM*DIM].nrParts;
+
                         cubeCorners[6] = 64;
+			density[20] += cell[j+DIM*DIM].nrParts;
+
                         cubeCorners[7] = 128;
+			density[23] += cell[j+DIM*DIM].nrParts;
+
                 }
                 
                 //Kolla kuber som delar en edge med vår kub
                 if(x!=0 && y!=0 && cell[j-DIM - 1].state == 1)
                 {
                         cubeCorners[0] = 1;
+			density[0] += cell[j-DIM-1].nrParts;
+			density[1] += cell[j-DIM-1].nrParts;
+
                         cubeCorners[3] = 8;
+			density[9] += cell[j-DIM-1].nrParts;
+			density[10] += cell[j-DIM-1].nrParts;
                 }
                 if(x!=DIM-1 && y!=0 && cell[j-DIM + 1].state == 1)
                 {
                         cubeCorners[1] = 2;
+			density[3] += cell[j-DIM+1].nrParts;
+			density[4] += cell[j-DIM+1].nrParts;
+
                         cubeCorners[2] = 4;
+			density[6] += cell[j-DIM+1].nrParts;
+			density[7] += cell[j-DIM+1].nrParts;
                 }
                 if(y!=0 && z!=0 && cell[j-DIM - DIM*DIM].state == 1)
                 {
                         cubeCorners[0] = 1;
+			density[1] += cell[j-DIM - DIM*DIM].nrParts;
+			density[2] += cell[j-DIM - DIM*DIM].nrParts;
+
                         cubeCorners[1] = 2;
+			density[4] += cell[j-DIM - DIM*DIM].nrParts;
+			density[5] += cell[j-DIM - DIM*DIM].nrParts;
+
                 }
                 if(y!=0 && z!=DIM-1 && cell[j-DIM + DIM*DIM].state == 1)
                 {
                         cubeCorners[2] = 4;
+			density[7] += cell[j-DIM + DIM*DIM].nrParts;
+			density[8] += cell[j-DIM + DIM*DIM].nrParts;
+
                         cubeCorners[3] = 8;
+			density[10] += cell[j-DIM + DIM*DIM].nrParts;
+			density[11] += cell[j-DIM + DIM*DIM].nrParts;
+
                 }
                 if(x!=0 && y!=DIM-1 && cell[j+DIM - 1].state == 1)
                 {
                         cubeCorners[4] = 16;
+			density[12] += cell[j+DIM - 1].nrParts;
+			density[13] += cell[j+DIM - 1].nrParts;
+
                         cubeCorners[7] = 128;
+			density[21] += cell[j+DIM - 1].nrParts;
+			density[22] += cell[j+DIM - 1].nrParts;
                 }
                 if(x!=DIM-1 && y!=DIM-1 && cell[j+DIM + 1].state == 1)
                 {
                         cubeCorners[5] = 32;
+			density[15] += cell[j+DIM + 1].nrParts;
+			density[16] += cell[j+DIM + 1].nrParts;
+
                         cubeCorners[6] = 64;
+			density[18] += cell[j+DIM + 1].nrParts;
+			density[19] += cell[j+DIM + 1].nrParts;
                 }
                 if(y!=DIM-1 && z!=0 && cell[j+DIM - DIM*DIM].state == 1)
                 {
                         cubeCorners[4] = 16;
+			density[13] += cell[j+DIM - DIM*DIM].nrParts;
+			density[14] += cell[j+DIM - DIM*DIM].nrParts;
+
                         cubeCorners[5] = 32;
+			density[16] += cell[j+DIM - DIM*DIM].nrParts;
+			density[17] += cell[j+DIM - DIM*DIM].nrParts;
                 }
                 if(y!=DIM-1 && z!=DIM-1 && cell[j+DIM + DIM*DIM].state == 1)
                 {
                         cubeCorners[6] = 64;
+			density[19] += cell[j+DIM + DIM*DIM].nrParts;
+			density[20] += cell[j+DIM + DIM*DIM].nrParts;
+
                         cubeCorners[7] = 128;
+			density[22] += cell[j+DIM + DIM*DIM].nrParts;
+			density[23] += cell[j+DIM + DIM*DIM].nrParts;
                 }    
                 if(x!=0 && z!=0 && cell[j-1 - DIM*DIM].state == 1)
                 {
                         cubeCorners[0] = 1;
+			density[0] += cell[j-1 - DIM*DIM].nrParts;
+			density[2] += cell[j-1 - DIM*DIM].nrParts;
+
                         cubeCorners[4] = 16;
+			density[12] += cell[j-1 - DIM*DIM].nrParts;
+			density[14] += cell[j-1 - DIM*DIM].nrParts;
                 }
                 if(x!=DIM-1 && z!=0 && cell[j+1 - DIM*DIM].state == 1)
                 {
                         cubeCorners[1] = 2;
+			density[3] += cell[j+1 - DIM*DIM].nrParts;
+			density[5] += cell[j+1 - DIM*DIM].nrParts;
+
                         cubeCorners[5] = 32;
+			density[15] += cell[j+1 - DIM*DIM].nrParts;
+			density[17] += cell[j+1 - DIM*DIM].nrParts;
                 }
                 if(x!=0 && z!=DIM-1 && cell[j-1 + DIM*DIM].state == 1)
                 {
                         cubeCorners[7] = 128;
+			density[21] += cell[j-1 + DIM*DIM].nrParts;
+			density[23] += cell[j-1 + DIM*DIM].nrParts;
+
                         cubeCorners[3] = 8;
+			density[9] += cell[j-1 + DIM*DIM].nrParts;
+			density[11] += cell[j-1 + DIM*DIM].nrParts;
                 }    
                 if(x!=DIM-1 && z!=DIM-1 && cell[j+1 + DIM*DIM].state == 1)
                 {
                         cubeCorners[6] = 64;
+			density[18] += cell[j+1 + DIM*DIM].nrParts;
+			density[20] += cell[j+1 + DIM*DIM].nrParts;
+
                         cubeCorners[2] = 4;
+			density[6] += cell[j+1 + DIM*DIM].nrParts;
+			density[8] += cell[j+1 + DIM*DIM].nrParts;
                 }  
  
                 //Kollar kuber som delar hörnpunkt med vår kub
                 if(x!=0 && y!=0 && z!=0 && cell[j-1 - DIM - DIM*DIM].state == 1)
                 {
                         cubeCorners[0] = 1;
+			density[0] += cell[j-1 - DIM - DIM*DIM].nrParts;
+			density[1] += cell[j-1 - DIM - DIM*DIM].nrParts;
+			density[2] += cell[j-1 - DIM - DIM*DIM].nrParts;
+
                 } 
                 if(x!=DIM-1 && y!=0 && z!=0 && cell[j+1 - DIM - DIM*DIM].state == 1)
                 {
                         cubeCorners[1] = 2;
+			density[3] += cell[j+1 - DIM - DIM*DIM].nrParts;
+			density[4] += cell[j+1 - DIM - DIM*DIM].nrParts;
+			density[5] += cell[j+1 - DIM - DIM*DIM].nrParts;
                 }  
                 if(x!=0 && y!=0 && z!=DIM-1 && cell[j-1 - DIM + DIM*DIM].state == 1)
                 {
                         cubeCorners[3] = 8;
+			density[9] += cell[j-1 - DIM + DIM*DIM].nrParts;
+			density[10] += cell[j-1 - DIM + DIM*DIM].nrParts;
+			density[11] += cell[j-1 - DIM + DIM*DIM].nrParts;
                 } 
                 if(x!=DIM-1 && y!=0 && z!=DIM-1 && cell[j+1 - DIM + DIM*DIM].state == 1)
                 {
                         cubeCorners[2] = 4;
+			density[6] += cell[j+1 - DIM + DIM*DIM].nrParts;
+			density[7] += cell[j+1 - DIM + DIM*DIM].nrParts;
+			density[8] += cell[j+1 - DIM + DIM*DIM].nrParts;
                 }
                 if(x!=0 && y!=DIM-1 && z!=0 && cell[j-1 + DIM - DIM*DIM].state == 1)
                 {
                         cubeCorners[4] = 16;
+			density[12] += cell[j-1 + DIM - DIM*DIM].nrParts;
+			density[13] += cell[j-1 + DIM - DIM*DIM].nrParts;
+			density[14] += cell[j-1 + DIM - DIM*DIM].nrParts;
                 } 
                 if(x!=DIM-1 && y!=DIM-1 && z!=0 && cell[j+1 + DIM - DIM*DIM].state == 1)
                 {
                         cubeCorners[5] = 32;
+			density[15] += cell[j+1 + DIM - DIM*DIM].nrParts;
+			density[16] += cell[j+1 + DIM - DIM*DIM].nrParts;
+			density[17] += cell[j+1 + DIM - DIM*DIM].nrParts;
                 }  
                 if(x!=0 && y!=DIM-1 && z!=DIM-1 && cell[j-1 + DIM + DIM*DIM].state == 1)
                 {
                         cubeCorners[7] = 128;
+			density[21] += cell[j-1 + DIM + DIM*DIM].nrParts;
+			density[22] += cell[j-1 + DIM + DIM*DIM].nrParts;
+			density[23] += cell[j-1 + DIM + DIM*DIM].nrParts;
                 } 
                 if(x!=DIM-1 && y!=DIM-1 && z!=DIM-1 && cell[j+1 + DIM + DIM*DIM].state == 1)
                 {
                         cubeCorners[6] = 64;
+			density[18] += cell[j+1 + DIM + DIM*DIM].nrParts;
+			density[19] += cell[j+1 + DIM + DIM*DIM].nrParts;
+			density[20] += cell[j+1 + DIM + DIM*DIM].nrParts;
                 }
                 
 
@@ -248,10 +444,59 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
                         Case += cubeCorners[k];
                 }
 
+		
                 //vart ligger edgesen i världen
 
+		// Ersätta detta med en loop ? 
+		
+		edge[0] = SetVector( interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize+cellSize, density[0], density[3])
+		 , -1.0f+y*cellSize, -1.0f+z*cellSize);
+
+                edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, 
+		interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[5], density[8]));
+
+                edge[2] = SetVector( interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[9], density[6])
+		, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
+
+                edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, 
+		interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[2], density[11]));
+                
+		//toppen av cuben
+                edge[4] = SetVector(interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[12], density[15])
+		, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
+
+                edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, 
+		interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[17], density[20]));
+
+
+                edge[6] = SetVector(interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[21], density[18])
+		, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
+
+                edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize,
+		interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize+cellSize, density[14], density[23]));
+                
+		//sidorna av cuben
+                edge[8] = SetVector(-1.0f+x*cellSize, 
+		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[1], density[13])
+		, -1.0f+z*cellSize);
+
+
+                edge[9] = SetVector(-1.0f+(x+1)*cellSize, 
+		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[4], density[16])
+		, -1.0f+z*cellSize);
+	
+                edge[10] = SetVector(-1.0f+(x+1)*cellSize, 
+		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[7], density[19])
+		, -1.0f+(z+1)*cellSize);
+
+                edge[11] = SetVector(-1.0f+x*cellSize,
+		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[10], density[22])
+		, -1.0f+(z+1)*cellSize); 
+		*/
+
                 //botten av cuben
-                edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
+        	// Backup       
+		/*edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
                 edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
                 edge[2] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
                 edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
@@ -267,7 +512,8 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
                 edge[9] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
                 edge[10] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
                 edge[11] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
-                
+                */
+
                 //hämta vilket case
                 int tmp;
                 
@@ -277,25 +523,32 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
                         if(tmp != -1)
                         {	
 				(*mTris) = realloc((*mTris),(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
-				/*
-				if ( temp != NULL ) 
-				{
-					mTris = temp;
-	
-				} 
-				else 
-				{
-					free(mTris);
-					printf("%s", "FFFEEEEEEELL!!!!");				
-				}
-				*/		
-
-                                (*mTris)[count] = edge[tmp].x;
+				
+		
+				/* 
+					Here one could save the points via index. If the point
+					already exists. Use the index. Otherwise add point to list and then 
+					use the index.
+				*/                                
+				(*mTris)[count] = edge[tmp].x;
                                 count++;
                                 (*mTris)[count] = edge[tmp].y;
                                 count++;                                
                                 (*mTris)[count] = edge[tmp].z;
                                 count++;
+				////////////////////////////////////////////////////////////////////////
+				int ind = vertIndex(edge[tmp]);
+				if(ind == -1){
+					verts = realloc(verts, (vertListSize+1) * sizeof(Vertlist));
+					verts[vertListSize].position = SetVector(edge[tmp].x, edge[tmp].y, edge[tmp].z);
+					verts[vertListSize].normal = SetVector(0.0f, 0.0f, 0.0f);				
+					verts[vertListSize].nr = 1;
+					vertListSize++;
+				}else{
+					verts[ind].nr++;
+					//printf("%i  \n", ind);
+				}
+				////////////////////////////////////////////////////////////////////////
                         }
 			else
                         	k=15;
@@ -303,25 +556,31 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
                 }
 		
 	}
+	//printf("found a total of  %i vertices \n\n", vertListSize);
 	
 	int normalCount = 0;
 	vec3 normal, u, v, v1, v2;
-
+	//Index of the normal	
+	int normInd;
 	(*mNorms) = realloc((*mNorms),count * sizeof(GLfloat));
 
-	while(normalCount < count){
+	while(normalCount < count)
+	{
 		v1 = SetVector((*mTris)[normalCount], (*mTris)[normalCount+1], (*mTris)[normalCount+2]);
 		v2 = SetVector((*mTris)[normalCount+3], (*mTris)[normalCount+4], (*mTris)[normalCount+5]);
-		u = Normalize(VectorSub(v2, v1));
+		u = VectorSub(v2, v1);
 		
 		v2 = SetVector((*mTris)[normalCount+6], (*mTris)[normalCount+7], (*mTris)[normalCount+8]);
 		v = Normalize(VectorSub(v2, v1));
-
+		
 		normal = Normalize(CrossProduct(u, v));
 		
+		
+		/*
 		(*mNorms)[normalCount] = normal.x;
 		(*mNorms)[normalCount+1] = normal.y;
 		(*mNorms)[normalCount+2] = normal.z;
+		
 
 		(*mNorms)[normalCount+3] = normal.x;
 		(*mNorms)[normalCount+4] = normal.y;
@@ -329,14 +588,76 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 
 		(*mNorms)[normalCount+6] = normal.x;
 		(*mNorms)[normalCount+7] = normal.y;
-		(*mNorms)[normalCount+8] = normal.z;	
-		printf("%f, ", (*mNorms)[normalCount]);
-		printf("%f, ", (*mNorms)[normalCount+1]);
-		printf("%f, ", (*mNorms)[normalCount+2]);
-		printf("%s", "\n");
+		(*mNorms)[normalCount+8] = normal.z;
+		*/
+		/*Find the index of this normal with help of vertex. Then add this normal 
+		to a summed normal.*/
+		if(Norm(normal) > 0.0001){
+		normInd = vertIndex(SetVector((*mTris)[normalCount], (*mTris)[normalCount+1], (*mTris)[normalCount+2]));
+		verts[normInd].normal = VectorAdd(verts[normInd].normal, SetVector(normal.x, normal.y, normal.z));
+		
+		normInd = vertIndex(SetVector((*mTris)[normalCount+3], (*mTris)[normalCount+4], (*mTris)[normalCount+5]));
+		verts[normInd].normal = VectorAdd(verts[normInd].normal, SetVector(normal.x, normal.y, normal.z));
+		
+		normInd = vertIndex(SetVector((*mTris)[normalCount+6], (*mTris)[normalCount+7], (*mTris)[normalCount+8]));
+		verts[normInd].normal = VectorAdd(verts[normInd].normal, SetVector(normal.x, normal.y, normal.z));	
+		//printf("normal is %f, %f, %f ", normal.x, normal.y, normal.z);  
+		}		
 		normalCount+=9;
 	}
+	//printf("%s", "\n\n");
+
+	/*
+		Normals for all indices have been calculated. Now one could add up all normals sharing a 
+		vertex. Then divide with number of vertices or normalize. Then set normals for all with the 
+		same index in the vertex list.
+		1. Get all normals and divide by number of vertices sharing that normal and then normalize. Klar
+		2. Take one point and find its index
+		3. Use index to get new normal
+	*/
+	int k;
+	for(k=0; k<vertListSize; k++){
+		verts[k].normal.x = verts[k].normal.x / verts[k].nr;
+		verts[k].normal.y = verts[k].normal.y / verts[k].nr;
+		verts[k].normal.z = verts[k].normal.z / verts[k].nr;
+		verts[k].normal = Normalize(verts[k].normal);
+		//printf("New normal is %f, %f, %f Number of normals was %i \n", verts[k].normal.x, verts[k].normal.y, verts[k].normal.z, verts[k].nr);  
+	}
+	int ind;
+	for(k=0; k<count; k=k+3){
+		ind = vertIndex(SetVector((*mTris)[k], (*mTris)[k+1], (*mTris)[k+2]));
+		(*mNorms)[k] = verts[ind].normal.x;
+		(*mNorms)[k+1] = verts[ind].normal.y;
+		(*mNorms)[k+2] = verts[ind].normal.z;		
+	}
+	//printf("%s", "\n\n");
 	//Ge triSize storleken på det allokerade minnet
+	triSize = (count) * sizeof(GLfloat); 
+
+	
+}	
+
+/* 	// Interpolation i marching cubes...
+
+	http://www3.cs.stonybrook.edu/~mueller/teaching/cse564/marchingCubes.pdf
+	
+	iso = isovalue
+	u = distance between corner and interpolated point (typ.. avstandet mellan hornet och där triangelns horn är.) 
+	v1, v2 = obtained by central differencing https://en.wikipedia.org/wiki/Central_differencing_scheme  
+	g1, g2 = gradient vectors	
+
+
+	iso = v1 * ( 1 - u ) + v2 * u
+	u = (v1 - iso) / (v1 - v2)
+
+	interpolate vertex color:
+	
+	c1 = u * c2 + ( 1 - u ) * c1
+
+	interpolate vertex normal: 
+
+	n1 = u * g2 + ( 1 - u ) * g1
+=======
 	triSize = count * sizeof(GLfloat); 
 	//return mTris;
 	//printf("%i, ", triSize);
@@ -365,14 +686,26 @@ vec3 interpolate(vec3 p1, vec3 p2, double valP1, double valP2)
 	p.x = p1.x + mu * (p2.x - p1.x);
 	p.y = p1.y + mu * (p2.y - p1.y);
 	p.z = p1.z + mu * (p2.z - p1.z);
+>>>>>>> Strut
 
-	return p; 
+	// Remove Ambiguities Using the Asymptotic Decider Method 
+	// ??????????????????????????????????????????????????????	
 
-}
+	Salpha = (B00 - B01) / (B00 + B11 - B01 - B10)
+	Talpha = (B00 - B01) / (B00 + B11 - B01 - B10)
 
+	- a surface created by bilinear interpolation
 
-// Every saint has a past and every sinner has a future
-// Oscar Wilde
+	function (1-s, s) [B00, B01; B10, B11] (1-t, t)
+
+	Give rise to 2 hypoerbolas B(s,t) = alpha (isovalue) 
+
+	-Ambiguity: both hyperbolas intersect domain (0,0) and (1,1)
+
+	-Resolve ambiguity by comparing B(Salpha, Talpha) with alpha 
+
+*/
+
 
 //http://paulbourke.net/geometry/polygonise/
 int triTable[256][16] =
