@@ -1,3 +1,13 @@
+/*
+	Marching Gangster cubes
+	TSBK03
+	Linköpings tekniska högskola
+	Rövargänget:
+	Gustav "Gubbsatan" Hallström
+	Sebastian "Legolas" Alfredsson
+	Viktor "Täbybronks" Kraft
+*/
+
 /* www.urbandictionary.com/define.php?term=MC
 MC
 Short for master of ceremonies or mic controller. Essentially a word for a rapper but the term is not limited to hip hop. Drum and Bass, Garage, Happy Hardcore, Ragga and old school rave all feature MCs, however with these genres, the MC generally MCs live while a DJ mixes the tunes, whereas hip hop MCs mainly do so on record
@@ -14,12 +24,15 @@ I'm MCing at a house party tonight, you coming?
 
 #define kBallSize 0.3
 #define boundRad 0.3
-#define DIM 32
+#define DIM 12
 
 // Antalet tetraedrar
-#define NO_OBJECTS 80
+#define NO_OBJECTS 600
 #define gravity 9.82
-#define threshold 1
+//#define threshold 1
+
+// öööh.. interpolation?  
+#define isolevel 10
 #define cellSize 2.0/DIM
 
 typedef struct Tetra
@@ -62,12 +75,23 @@ typedef struct MCube
 
 } MCube;
 
+typedef struct Vertlist
+{
+	vec3 position;
+	vec3 normal;
+	int nr;
+}Vertlist;
+
 //Denna håller reda på hur stort utrymme det allokerade minnet tar. Används till bufferdata
 extern int triSize; 
 
 extern float XMIN , XMAX , YMIN , YMAX,  ZMIN, ZMAX;
 
+//extern GLfloat *mTris;
+//extern GLfloat *mNorms;
 
+Vertlist *verts;
+int vertListSize;
 
 //http://paulbourke.net/geometry/polygonise/
 extern int triTable[256][16]; 

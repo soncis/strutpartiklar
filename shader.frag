@@ -22,7 +22,7 @@ void main(void)
 		specular = 1.0 * pow(specular, 150.0);
 	specular = max(specular, 0.0);	
 	
-	float intensity =  0.7 * diffuse + 30.0 * specular; 
+	float intensity =  0.7 * diffuse + 20.0 * specular; 
 	
 	outColor = vec4(intensity, intensity,intensity, 1.0); 
 }

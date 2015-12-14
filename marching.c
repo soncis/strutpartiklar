@@ -1,4 +1,5 @@
 /*
+	14/12 2015
 	Marching Gangster cubes
 	TSBK03
 	Linköpings tekniska högskola
@@ -22,19 +23,37 @@ I'm MCing at a house party tonight, you coming?
 
 #include "marching.h"
 
-// ööh.. 
+// Absolutbeloppet
 #define abs(x) (x > 0.0? x: -x)
 
 int triSize;
 float XMIN = -1.0f, XMAX = 1.0f, YMIN = -1.0f, YMAX=1.0f,  ZMIN = -1.0f, ZMAX=1.0f;
 
-// öööh.. interpolation?  
-float isolevel = 2.0;
-
 
 // probably not needed or already included
 vec3 p1,p2;
 double valp1,valp2;
+
+// Compare two vectors and check if they are the same
+int compareVectors(vec3 a, vec3 b){
+	if(Norm(VectorSub(a,b)) < 0.00001){		
+		return 1;
+	}
+	return 0;
+}
+
+
+// Return index for a position if it exists, otherwise return -1
+int vertIndex(vec3 v){
+	int i, index=-1;	
+	for(i=0; i<vertListSize; i++){
+		if(compareVectors(verts[i].position, v) == 1){
+			index = i;
+			//break; 
+		}
+	}
+	return index;
+}
 
 // Linear interpolation 
 float interpolate(float p1, float p2, float valP1, float valP2)
@@ -61,11 +80,18 @@ float interpolate(float p1, float p2, float valP1, float valP2)
 
 }
 
-
-GLfloat* March(GLfloat *mTris, Tetra *tetras)
+// Marching cubes
+void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 {
 	mc.pos = SetVector(XMIN, YMIN, ZMIN);
 	int i;
+	free(*mTris);
+	free(*mNorms);
+	*mTris = malloc(0);
+	*mNorms = malloc(0);
+	free(verts);
+	verts = malloc(0);
+	vertListSize = 0;
 	// loop through all cells and calculate number of particles
 	for(i = 0; i < DIM*DIM*DIM; i++)
 	{ 
@@ -75,13 +101,13 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 		for(j = 0; j < NO_OBJECTS; j++)
 		{
 			// Check if particle is inside this cell
-			//OBS! Will now register both cells on cell border
+			//OBS! Will NOT register both cells on cell border
 			if(tetras[j].pos.x >= mc.pos.x 
-			&& tetras[j].pos.x <= (mc.pos.x + cellSize) 
+			&& tetras[j].pos.x < (mc.pos.x + cellSize) 
 			&& tetras[j].pos.y >= mc.pos.y 
-			&& tetras[j].pos.y <= (mc.pos.y + cellSize)
+			&& tetras[j].pos.y < (mc.pos.y + cellSize)
 			&& tetras[j].pos.z >= mc.pos.z 
-			&& tetras[j].pos.z <= (mc.pos.z + cellSize))
+			&& tetras[j].pos.z < (mc.pos.z + cellSize))
 			{
 				// If particle is inside cell add to this cells particle count
 				cell[i].nrParts++;	
@@ -96,7 +122,7 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 		}
 		/*
 		Step through cells using the position and check against the borders.
-		When XMAX position is used, step up in y direction and reset xpos.
+		When XMAX position is reached, step up in y direction and reset xpos.
 		*/
 		mc.pos.x += cellSize;
 		if(mc.pos.x == XMAX)
@@ -419,9 +445,6 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 
 		
                 //vart ligger edgesen i världen
-
-		// Ersätta detta med en loop ? 
-		
 		edge[0] = SetVector( interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize+cellSize, density[0], density[3])
 		 , -1.0f+y*cellSize, -1.0f+z*cellSize);
 
@@ -465,27 +488,7 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                 edge[11] = SetVector(-1.0f+x*cellSize,
 		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[10], density[22])
 		, -1.0f+(z+1)*cellSize); 
-
-
-                //botten av cuben
-        	/* Backup       
-		edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
-                edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                edge[2] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
-                edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                
-		//toppen av cuben
-                edge[4] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
-                edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                edge[6] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
-                edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                
-		//sidorna av cuben
-                edge[8] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-                edge[9] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-                edge[10] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
-                edge[11] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
-                */
+		
 
                 //hämta vilket case
                 int tmp;
@@ -495,26 +498,31 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
                         tmp = triTable[Case][k];
                         if(tmp != -1)
                         {	
-				GLfloat *temp = realloc(mTris,(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
+				(*mTris) = realloc((*mTris),(count+3) * sizeof(GLfloat)); /* give the pointer some memory */
 				
-				if ( temp != NULL ) 
-				{
-					mTris = temp;
-	
-				} 
-				else 
-				{
-					free(mTris);
-					printf("%s", "FFFEEEEEEELL!!!!");				
-				}
-						
-
-                                mTris[count] = edge[tmp].x;
+		
+				/* 
+				Here one could save the points via index. If the point
+				already exists. Use the index. Otherwise add point to list and then 
+				use the index.
+				*/                                
+				(*mTris)[count] = edge[tmp].x;
                                 count++;
-                                mTris[count] = edge[tmp].y;
+                                (*mTris)[count] = edge[tmp].y;
                                 count++;                                
-                                mTris[count] = edge[tmp].z;
+                                (*mTris)[count] = edge[tmp].z;
                                 count++;
+
+				int ind = vertIndex(edge[tmp]);
+				if(ind == -1){
+					verts = realloc(verts, (vertListSize+1) * sizeof(Vertlist));
+					verts[vertListSize].position = SetVector(edge[tmp].x, edge[tmp].y, edge[tmp].z);
+					verts[vertListSize].normal = SetVector(0.0f, 0.0f, 0.0f);				
+					verts[vertListSize].nr = 1;
+					vertListSize++;
+				}else{
+					verts[ind].nr++;
+				}
                         }
 			else
                         	k=15;
@@ -523,51 +531,69 @@ GLfloat* March(GLfloat *mTris, Tetra *tetras)
 		
 	}
 	
+	int normalCount = 0;
+	vec3 normal, u, v, v1, v2;
+	//Index of the normal	
+	int normInd;
+	(*mNorms) = realloc((*mNorms),count * sizeof(GLfloat));
+
+	while(normalCount < count)
+	{
+		v1 = SetVector((*mTris)[normalCount], (*mTris)[normalCount+1], (*mTris)[normalCount+2]);
+		v2 = SetVector((*mTris)[normalCount+3], (*mTris)[normalCount+4], (*mTris)[normalCount+5]);
+		u = VectorSub(v2, v1);
+		
+		v2 = SetVector((*mTris)[normalCount+6], (*mTris)[normalCount+7], (*mTris)[normalCount+8]);
+		v = Normalize(VectorSub(v2, v1));
+		
+		normal = Normalize(CrossProduct(u, v));
+		
+
+		/*Find the index of this normal with help of vertex. Then add this normal 
+		to a summed normal.*/
+		if(Norm(normal) > 0.0001)
+		{
+			normInd = vertIndex(SetVector((*mTris)[normalCount], (*mTris)[normalCount+1], (*mTris)[normalCount+2]));
+			verts[normInd].normal = VectorAdd(verts[normInd].normal, SetVector(normal.x, normal.y, normal.z));
+	
+			normInd = vertIndex(SetVector((*mTris)[normalCount+3], (*mTris)[normalCount+4], (*mTris)[normalCount+5]));
+			verts[normInd].normal = VectorAdd(verts[normInd].normal, SetVector(normal.x, normal.y, normal.z));
+	
+			normInd = vertIndex(SetVector((*mTris)[normalCount+6], (*mTris)[normalCount+7], (*mTris)[normalCount+8]));
+			verts[normInd].normal = VectorAdd(verts[normInd].normal, SetVector(normal.x, normal.y, normal.z));	
+		
+		}		
+		normalCount+=9;
+	}
+
+
+	/*
+	Normals for all indices have been calculated. Now one could add up all normals sharing a 
+	vertex. Then divide with number of vertices or normalize. Then set normals for all with the 
+	same index in the vertex list.
+	1. Get all normals and divide by number of vertices sharing that normal and then normalize. Klar
+	2. Take one point and find its index
+	3. Use index to get new normal
+	*/
+	int k;
+	for(k=0; k<vertListSize; k++){
+		verts[k].normal.x = verts[k].normal.x / verts[k].nr;
+		verts[k].normal.y = verts[k].normal.y / verts[k].nr;
+		verts[k].normal.z = verts[k].normal.z / verts[k].nr;
+		verts[k].normal = Normalize(verts[k].normal);
+	}
+	int ind;
+	for(k=0; k<count; k=k+3){
+		ind = vertIndex(SetVector((*mTris)[k], (*mTris)[k+1], (*mTris)[k+2]));
+		(*mNorms)[k] = verts[ind].normal.x;
+		(*mNorms)[k+1] = verts[ind].normal.y;
+		(*mNorms)[k+2] = verts[ind].normal.z;		
+	}
+
 	//Ge triSize storleken på det allokerade minnet
 	triSize = (count) * sizeof(GLfloat); 
-	return mTris;
-	printf("%i", triSize);
+	
 }	
-
-/* 	// Interpolation i marching cubes...
-
-	http://www3.cs.stonybrook.edu/~mueller/teaching/cse564/marchingCubes.pdf
-	
-	iso = isovalue
-	u = distance between corner and interpolated point (typ.. avstandet mellan hornet och där triangelns horn är.) 
-	v1, v2 = obtained by central differencing https://en.wikipedia.org/wiki/Central_differencing_scheme  
-	g1, g2 = gradient vectors	
-
-
-	iso = v1 * ( 1 - u ) + v2 * u
-	u = (v1 - iso) / (v1 - v2)
-
-	interpolate vertex color:
-	
-	c1 = u * c2 + ( 1 - u ) * c1
-
-	interpolate vertex normal: 
-
-	n1 = u * g2 + ( 1 - u ) * g1
-
-	// Remove Ambiguities Using the Asymptotic Decider Method 
-	// ??????????????????????????????????????????????????????	
-
-	Salpha = (B00 - B01) / (B00 + B11 - B01 - B10)
-	Talpha = (B00 - B01) / (B00 + B11 - B01 - B10)
-
-	- a surface created by bilinear interpolation
-
-	function (1-s, s) [B00, B01; B10, B11] (1-t, t)
-
-	Give rise to 2 hypoerbolas B(s,t) = alpha (isovalue) 
-
-	-Ambiguity: both hyperbolas intersect domain (0,0) and (1,1)
-
-	-Resolve ambiguity by comparing B(Salpha, Talpha) with alpha 
-
-*/
-
 
 //http://paulbourke.net/geometry/polygonise/
 int triTable[256][16] =
