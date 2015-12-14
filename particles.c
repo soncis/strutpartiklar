@@ -257,9 +257,9 @@ GLfloat tetraNormals[] =
 void Display()
 {
 	char buf[100] = {0};
-	snprintf(buf, 100, "Sreums strutpartiklar, FPS : %.1f", FPS);
+	snprintf(buf, 100, "Serums strutpartiklar, FPS : %.1f", FPS);
 
-	glutSetWindowTitle(buf);	
+	glutSetWindowTitle(buf); 	
 	
 	// Uppdatera tetrornas pos och annat smött å gött 
 

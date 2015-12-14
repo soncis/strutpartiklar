@@ -1,6 +1,16 @@
+/*
+	Marching Gangster cubes
+	TSBK03
+	Linköpings tekniska högskola
+	Rövargänget:
+	Gustav "Gubbsatan" Hallström
+	Sebastian "Legolas" Alfredsson
+	Viktor "Täbybronks" Kraft
+*/
+
+
 // OpenGL 3 conversion 2013.
 //gcc particles.c marching.c common/*.c common/Linux/MicroGlut.c -lGL -lX11 -lm -o particles -I common -I common/Linux
-
 
 
 //#include <stdlib.h>
@@ -247,7 +257,7 @@ GLfloat tetraNormals[] =
 void Display()
 {
 	char buf[100] = {0};
-	snprintf(buf, 100, "Sreums strutpartiklar, FPS : %.1f", FPS);
+	snprintf(buf, 100, "Serums strutpartiklar, FPS : %.1f", FPS);
 
 	glutSetWindowTitle(buf);	
 	
