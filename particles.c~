@@ -85,7 +85,8 @@ Tetra tetras[NO_OBJECTS];
 
 // För keyboard-grejjen om marching
 // ska vara aktiverad eller inte
-int marchOn = 0; 
+int marchOn = 0, vertexOn = 1, interOn = 0, normOn = 0;
+ 
 
 // Fps grejjor
 int frameCount = 0; 
@@ -165,6 +166,30 @@ GLfloat *mNorms;
 
 // Every saint has a past and every sinner has a future
 // Oscar Wilde
+void boid(){
+	int i, j;
+	vec3 boidVec = SetVector(0.0f,0.0f,0.0f), diffVec = SetVector(0.0f,0.0f,0.0f), meanPos = SetVector(0.0f,0.0f,0.0f), meanVel = SetVector(0.0f,0.0f,0.0f);
+	for(i = 0; i < NO_OBJECTS; i++)
+	{
+		for(j = 0; j < NO_OBJECTS; j++)
+		{
+			if(i != j /*&& tetras[i].whichCell == tetras[j].whichCell*/)
+			{
+				diffVec = VectorSub(tetras[j].pos, tetras[i].pos);
+				boidVec = VectorAdd(boidVec, diffVec);
+				meanPos = VectorAdd(meanPos, tetras[j].pos);
+				meanPos = VectorAdd(meanVel, tetras[j].vel);
+				//printf("%s \n", "yes");
+			}	
+		}
+		meanPos = ScalarMult(meanPos, 1.0f/(NO_OBJECTS-1));
+		meanPos = ScalarMult(meanVel, 1.0f/(NO_OBJECTS-1));
+		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(VectorSub(meanPos, tetras[i].pos), 0.000001f));
+		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(meanVel, 0.00001f));
+		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(boidVec, 0.0000001f));
+		
+	}
+}
 
 void calcBounce(int nr){
 	vec3 normal = SetVector(0,0,0);
@@ -218,7 +243,8 @@ void drawTetra(int nr)
     	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, tmpMatrix.m);
 	// Rita ut tetraeder? 
 	glBindVertexArray(tetraArray);
-	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
+	if(vertexOn)
+		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);	
 }
 
 
@@ -297,6 +323,7 @@ void Display()
 	glUniformMatrix4fv(glGetUniformLocation(shader, "modelviewMatrix"), 1, GL_TRUE, viewMatrix.m);
 	
         March(&mTris, &mNorms,tetras); //Här kommer vi att få olika antal trianglar vilket innebär att vi måste kunna allokera en ny mängd minne
+	boid();
         // VBO for vertex data	
 	glGenVertexArrays(1, &mTriArray);
 	glBindVertexArray(mTriArray);
@@ -322,7 +349,8 @@ void Display()
 	
         glBindVertexArray(mTriArray); 
 	glBindVertexArray(mNormArray);     
-        glDrawArrays(GL_TRIANGLES, 0, (triSize/sizeof(GLfloat)/3));// draw objectperspective
+	if(marchOn)
+        	glDrawArrays(GL_TRIANGLES, 0, (triSize/sizeof(GLfloat)/3));// draw objectperspective
 	
 	//glFlush();
 	
@@ -346,7 +374,6 @@ void Reshape(int h, int w)
 
 void Init()
 {
-
 	// GL inits
 	//glClearColor(0.1, 0.1, 0.3, 0);
 	//glClearDepth(1.0);
@@ -416,19 +443,23 @@ void Init()
 	glVertexAttribPointer(glGetAttribLocation(shader, "in_Normal"), 3, GL_FLOAT,
 	GL_FALSE, 0,0); 
 	
-	int i; 
+	int i, a, b; 
 	// Initiera variabler för flera tetror
 	for (i = 0; i < NO_OBJECTS; i++)
 	{
 		
 		tetras[i].mass = 0.00001;
 
-		tetras[i].pos = SetVector(-0.6 + 0.0005 * (float)i, -0.5f + 0.0001 * (float)i, -0.5f + 0.0001 * (float)i);
-		
+		//tetras[i].pos = SetVector(-0.6 + 0.0005 * (float)i, -0.5f + 0.0001 * (float)i, -0.5f + 0.0001 * (float)i);
+		//tetras[i].pos = SetVector(1.4f*(rand()/RAND_MAX)-0.7f, 1.4f*(rand()/RAND_MAX)-0.7f, 1.4f*(rand()/RAND_MAX)-0.7f);
 		//tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME) * 0.00001f * sin(i*(3.14f/8.0f)),tetras[i].mass * -982.0f ,glutGet(GLUT_ELAPSED_TIME)*0.00003f * sin(i*(3.14f/2.0f))); 		
-		tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME) * 0.00001f * sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00003f * sin(i*(3.14f/2.0f))); 		
-
-		
+		//tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME) * 0.00001f * sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00003f * sin(i*(3.14f/2.0f))); 		
+		tetras[i].pos = SetVector(0.0f,0.0f, 0.0f);		
+		tetras[i].vel = SetVector((float)0.02f*rand()/RAND_MAX-0.01f,(float)0.02f*rand()/RAND_MAX-0.01f,(float)0.02f*rand()/RAND_MAX-0.01f); 
+		if(a==sqrt(NO_OBJECTS)){
+			a=0;
+			b++;
+		}
 		//tetras[i].pos = SetVector(0.0f,0.0f, 0.0f);
 		//tetras[i].vel = SetVector(0.0f,0.0f,0.0f);
 					
@@ -483,27 +514,45 @@ void calculateFPS()
 void Keyboardfunk(unsigned char key, int x, int y)
 {	
 
-	printf("success");
+	//printf("success");
 	if(key == 27)
 	{
-		printf("%s", "Marching cubes on");
-			
+		exit(0);	
 	}
-	/*switch (key)
+	switch (key)
 	{
 		case 'o':
-			printf("%s", "Marching cubes on");
+			printf("%s", "Marching cubes on\n");
 			marchOn = 1;			
 			break;
 
 		case 'p':
-			printf("%s", "Marching cubes off");
+			printf("%s", "Marching cubes off\n");
 			marchOn = 0;
 			break;
-
+		case 'v':
+			vertexOn = 1;
+			break;
+		case 'b':
+			vertexOn = 0;
+			break;
+		case 'a':
+			interOn = 1;
+			break;
+		case 's':
+			interOn = 0;
+			break;
+		case 'n':
+			vertNormOn = 1;
+			break;
+		case 'm':
+			vertNormOn = 0;
+			break;
 		case 0x1b:
 			exit(0);
-	}*/
+		//default: 
+			//break;
+	}
 }
 
 void Idle()
@@ -538,12 +587,10 @@ int main(int argc, char *argv[])
 	glutReshapeFunc(Reshape);
 	glutIdleFunc(Idle);
 	
-	// Tangäntbård
-	glutKeyboardFunc(Keyboardfunk);
-
 	Init();
 	
-	
+	// Tangäntbård
+	glutKeyboardFunc(Keyboardfunk);
 
 	glutMainLoop();
 	exit(0);

@@ -111,7 +111,8 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 			&& tetras[j].pos.z < (mc.pos.z + cellSize))
 			{
 				// If particle is inside cell add to this cells particle count
-				cell[i].nrParts++;	
+				cell[i].nrParts++;
+				tetras[j].whichCell = i;	
 			}
 				
 		}
@@ -448,71 +449,73 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
                 //vart ligger edgesen i världen
 
 		// Ersätta detta med en loop ? 
-		
-		edge[0] = SetVector( interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize+cellSize, density[0], density[3])
-		 , -1.0f+y*cellSize, -1.0f+z*cellSize);
+		if(interOn){
+			edge[0] = SetVector( interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize+cellSize, density[0], density[3])
+			 , -1.0f+y*cellSize, -1.0f+z*cellSize);
 
-                edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, 
-		interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[5], density[8]));
+		        edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, 
+			interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[5], density[8]));
 
-                edge[2] = SetVector( interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[9], density[6])
-		, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
+		        edge[2] = SetVector( interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[9], density[6])
+			, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
 
-                edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, 
-		interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[2], density[11]));
-                
-		//toppen av cuben
-                edge[4] = SetVector(interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[12], density[15])
-		, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
+		        edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, 
+			interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[2], density[11]));
+		        
+			//toppen av cuben
+		        edge[4] = SetVector(interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[12], density[15])
+			, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
 
-                edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, 
-		interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[17], density[20]));
-
-
-                edge[6] = SetVector(interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[21], density[18])
-		, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
-
-                edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize,
-		interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize+cellSize, density[14], density[23]));
-                
-		//sidorna av cuben
-                edge[8] = SetVector(-1.0f+x*cellSize, 
-		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[1], density[13])
-		, -1.0f+z*cellSize);
+		        edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, 
+			interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize + cellSize, density[17], density[20]));
 
 
-                edge[9] = SetVector(-1.0f+(x+1)*cellSize, 
-		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[4], density[16])
-		, -1.0f+z*cellSize);
+		        edge[6] = SetVector(interpolate(-1.0f+x*cellSize, -1.0f+x*cellSize + cellSize, density[21], density[18])
+			, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
+
+		        edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize,
+			interpolate(-1.0f+z*cellSize, -1.0f+z*cellSize+cellSize, density[14], density[23]));
+		        
+			//sidorna av cuben
+		        edge[8] = SetVector(-1.0f+x*cellSize, 
+			interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[1], density[13])
+			, -1.0f+z*cellSize);
+
+
+		        edge[9] = SetVector(-1.0f+(x+1)*cellSize, 
+			interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[4], density[16])
+			, -1.0f+z*cellSize);
 	
-                edge[10] = SetVector(-1.0f+(x+1)*cellSize, 
-		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[7], density[19])
-		, -1.0f+(z+1)*cellSize);
+		        edge[10] = SetVector(-1.0f+(x+1)*cellSize, 
+			interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[7], density[19])
+			, -1.0f+(z+1)*cellSize);
 
-                edge[11] = SetVector(-1.0f+x*cellSize,
-		interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[10], density[22])
-		, -1.0f+(z+1)*cellSize); 
-		*/
+		        edge[11] = SetVector(-1.0f+x*cellSize,
+			interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[10], density[22])
+			, -1.0f+(z+1)*cellSize); 
+		}
+		
 
                 //botten av cuben
-        	// Backup       
-		/*edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
-                edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                edge[2] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
-                edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                
-		//toppen av cuben
-                edge[4] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
-                edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                edge[6] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
-                edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-                
-		//sidorna av cuben
-                edge[8] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-                edge[9] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-                edge[10] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
-                edge[11] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
-                */
+        	// Backup 
+		if(!interOn){      
+			edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
+		        edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+		        edge[2] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
+		        edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+		        
+			//toppen av cuben
+		        edge[4] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
+		        edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+		        edge[6] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
+		        edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+		        
+			//sidorna av cuben
+		        edge[8] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
+		        edge[9] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
+		        edge[10] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
+		        edge[11] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
+		}        
 
                 //hämta vilket case
                 int tmp;
@@ -576,7 +579,7 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 		normal = Normalize(CrossProduct(u, v));
 		
 		
-		/*
+		
 		(*mNorms)[normalCount] = normal.x;
 		(*mNorms)[normalCount+1] = normal.y;
 		(*mNorms)[normalCount+2] = normal.z;
@@ -589,10 +592,10 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 		(*mNorms)[normalCount+6] = normal.x;
 		(*mNorms)[normalCount+7] = normal.y;
 		(*mNorms)[normalCount+8] = normal.z;
-		*/
+		/*
 		/*Find the index of this normal with help of vertex. Then add this normal 
 		to a summed normal.*/
-		if(Norm(normal) > 0.0001){
+		if(vertNormOn && Norm(normal) > 0.0001){
 		normInd = vertIndex(SetVector((*mTris)[normalCount], (*mTris)[normalCount+1], (*mTris)[normalCount+2]));
 		verts[normInd].normal = VectorAdd(verts[normInd].normal, SetVector(normal.x, normal.y, normal.z));
 		

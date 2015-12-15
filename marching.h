@@ -27,13 +27,14 @@ I'm MCing at a house party tonight, you coming?
 #define DIM 8
 
 // Antalet tetraedrar
-#define NO_OBJECTS 600
+#define NO_OBJECTS 200
 #define gravity 9.82
 //#define threshold 1
 
 // öööh.. interpolation?  
-#define isolevel 10
+#define isolevel 2
 #define cellSize 2.0/DIM
+extern int interOn, vertNormOn;
 
 typedef struct Tetra
 {
@@ -47,10 +48,12 @@ typedef struct Tetra
 	int alive;
 	
 	// Positioner
-	 vec3 pos; 
+	vec3 pos; 
 
 	// Hastigheten		
 	vec3 vel;
+
+	int whichCell;
 
 } Tetra;
 
