@@ -50,7 +50,7 @@ int vertIndex(vec3 v){
 	for(i=0; i<vertListSize; i++){
 		if(compareVectors(verts[i].position, v) == 1){
 			index = i;
-			//break; 
+			break; 
 		}
 	}
 	return index;
@@ -84,6 +84,8 @@ float interpolate(float p1, float p2, float valP1, float valP2)
 
 void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 {
+	
+	cell = realloc(cell, DIM*DIM*DIM*sizeof(Cell));
 	mc.pos = SetVector(XMIN, YMIN, ZMIN);
 	int i;
 	free(*mTris);
@@ -144,7 +146,7 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
         x=-1;
         vec3 edge[12];
         int count = 0;
-
+	float xCell, yCell, zCell;
 	for(j=0; j< DIM * DIM * DIM; j++)
         {
                 //detta gör vi för att inte alla hörnpunkter ska få värdet 1
@@ -493,28 +495,26 @@ void March(GLfloat **mTris, GLfloat **mNorms,Tetra *tetras)
 		        edge[11] = SetVector(-1.0f+x*cellSize,
 			interpolate(-1.0f+y*cellSize, -1.0f+y*cellSize+cellSize, density[10], density[22])
 			, -1.0f+(z+1)*cellSize); 
-		}
-		
-
-                //botten av cuben
-        	// Backup 
-		if(!interOn){      
-			edge[0] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+z*cellSize);
-		        edge[1] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-		        edge[2] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+y*cellSize, -1.0f+(z+1)*cellSize);
-		        edge[3] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+		}else{   
+			yCell = y*cellSize; 
+			xCell = x*cellSize; 
+			zCell = z*cellSize;   
+			edge[0] = SetVector(-1.0f+xCell+halfSize, -1.0f+ yCell, -1.0f+zCell);
+		        edge[1] = SetVector(-1.0f+xCell +cellSize, -1.0f+ yCell, -1.0f+zCell+halfSize);
+		        edge[2] = SetVector(-1.0f+xCell+halfSize, -1.0f+ yCell, -1.0f+zCell + cellSize);
+		        edge[3] = SetVector(-1.0f+xCell, -1.0f+ yCell, -1.0f+zCell+halfSize);
 		        
 			//toppen av cuben
-		        edge[4] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize);
-		        edge[5] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
-		        edge[6] = SetVector(-1.0f+x*cellSize+cellSize/2.0f, -1.0f+(y+1)*cellSize, -1.0f+(z+1)*cellSize);
-		        edge[7] = SetVector(-1.0f+x*cellSize, -1.0f+(y+1)*cellSize, -1.0f+z*cellSize+cellSize/2.0f);
+		        edge[4] = SetVector(-1.0f+xCell+halfSize, -1.0f+yCell + cellSize, -1.0f+zCell);
+		        edge[5] = SetVector(-1.0f+xCell + cellSize, -1.0f+yCell + cellSize, -1.0f+zCell+halfSize);
+		        edge[6] = SetVector(-1.0f+xCell+halfSize, -1.0f+yCell + cellSize, -1.0f+zCell + cellSize);
+		        edge[7] = SetVector(-1.0f+xCell, -1.0f+yCell + cellSize, -1.0f+zCell+halfSize);
 		        
 			//sidorna av cuben
-		        edge[8] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-		        edge[9] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+z*cellSize);
-		        edge[10] = SetVector(-1.0f+(x+1)*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);
-		        edge[11] = SetVector(-1.0f+x*cellSize, -1.0f+y*cellSize+cellSize/2.0f, -1.0f+(z+1)*cellSize);            
+		        edge[8] = SetVector(-1.0f+xCell, -1.0f+ yCell+halfSize, -1.0f+zCell);
+		        edge[9] = SetVector(-1.0f+xCell + cellSize, -1.0f+ yCell+halfSize, -1.0f+zCell);
+		        edge[10] = SetVector(-1.0f+xCell +cellSize, -1.0f+ yCell+halfSize, -1.0f+zCell + cellSize);
+		        edge[11] = SetVector(-1.0f+xCell, -1.0f+ yCell+halfSize, -1.0f+zCell + cellSize);            
 		}        
 
                 //hämta vilket case

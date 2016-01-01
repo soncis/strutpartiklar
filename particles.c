@@ -86,6 +86,9 @@ Tetra tetras[NO_OBJECTS];
 // För keyboard-grejjen om marching
 // ska vara aktiverad eller inte
 int marchOn = 0, vertexOn = 1, interOn = 0, vertNormOn = 0;
+int DIM = 8;
+float cellSize;
+float halfSize;
  
 
 // Fps grejjor
@@ -178,15 +181,15 @@ void boid(){
 				diffVec = VectorSub(tetras[j].pos, tetras[i].pos);
 				boidVec = VectorAdd(boidVec, diffVec);
 				meanPos = VectorAdd(meanPos, tetras[j].pos);
-				meanPos = VectorAdd(meanVel, tetras[j].vel);
+				meanVel = VectorAdd(meanVel, tetras[j].vel);
 				//printf("%s \n", "yes");
 			}	
 		}
 		meanPos = ScalarMult(meanPos, 1.0f/(NO_OBJECTS-1));
-		meanPos = ScalarMult(meanVel, 1.0f/(NO_OBJECTS-1));
-		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(VectorSub(meanPos, tetras[i].pos), 0.000001f));
-		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(meanVel, 0.00001f));
-		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(boidVec, 0.0000001f));
+		meanVel = ScalarMult(meanVel, 1.0f/(NO_OBJECTS-1));
+		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(VectorSub(meanPos, tetras[i].pos), 0.00000000001f));
+		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(meanVel, 0.0001f));
+		tetras[i].vel = VectorAdd(tetras[i].vel, ScalarMult(boidVec, 0.00000001f));
 		
 	}
 }
@@ -374,6 +377,8 @@ void Reshape(int h, int w)
 
 void Init()
 {
+	cellSize = 2.0/DIM;
+	halfSize = cellSize/2.0;
 	// GL inits
 	//glClearColor(0.1, 0.1, 0.3, 0);
 	//glClearDepth(1.0);
@@ -455,7 +460,7 @@ void Init()
 		//tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME) * 0.00001f * sin(i*(3.14f/8.0f)),tetras[i].mass * -982.0f ,glutGet(GLUT_ELAPSED_TIME)*0.00003f * sin(i*(3.14f/2.0f))); 		
 		//tetras[i].vel = SetVector(glutGet(GLUT_ELAPSED_TIME) * 0.00001f * sin(i*(3.14f/8.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00002f * sin(i*(3.14f/4.0f)),glutGet(GLUT_ELAPSED_TIME)*0.00003f * sin(i*(3.14f/2.0f))); 		
 		tetras[i].pos = SetVector(0.0f,0.0f, 0.0f);		
-		tetras[i].vel = SetVector((float)0.02f*rand()/RAND_MAX-0.01f,(float)0.02f*rand()/RAND_MAX-0.01f,(float)0.02f*rand()/RAND_MAX-0.01f); 
+		tetras[i].vel = SetVector((float)0.0002f*rand()/RAND_MAX-0.0001f,(float)0.0002f*rand()/RAND_MAX-0.0001f,(float)0.0002f*rand()/RAND_MAX-0.0001f); 
 		if(a==sqrt(NO_OBJECTS)){
 			a=0;
 			b++;
@@ -473,7 +478,7 @@ void Init()
       
 
 	// Så vi kan rotera scenen 
-	cam = SetVector(0, 0, 2);
+	cam = SetVector(0, 0, 3);
     	point = SetVector(0, 0, 0);
     	zprInit(&viewMatrix, cam, point);
 	
@@ -509,6 +514,7 @@ void calculateFPS()
         frameCount = 0;
     }
 }
+
 
 // funkar inte... än
 void Keyboardfunk(unsigned char key, int x, int y)
@@ -548,12 +554,24 @@ void Keyboardfunk(unsigned char key, int x, int y)
 		case 'm':
 			vertNormOn = 0;
 			break;
+		case 'z':
+			DIM = DIM*2;
+			cellSize = 2.0/DIM;
+			halfSize = cellSize/2.0;
+			break;
+		case 'x':
+			DIM = DIM/2;
+			cellSize = 2.0/DIM;
+			halfSize = cellSize/2.0;
+			break;
 		case 0x1b:
 			exit(0);
 		//default: 
 			//break;
 	}
 }
+
+
 
 void Idle()
 {

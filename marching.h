@@ -24,16 +24,18 @@ I'm MCing at a house party tonight, you coming?
 
 #define kBallSize 0.3
 #define boundRad 0.3
-#define DIM 8
+
 
 // Antalet tetraedrar
-#define NO_OBJECTS 200
+#define NO_OBJECTS 500
 #define gravity 9.82
 //#define threshold 1
 
 // öööh.. interpolation?  
 #define isolevel 2
-#define cellSize 2.0/DIM
+extern int DIM;
+extern float cellSize;
+extern float halfSize;
 extern int interOn, vertNormOn;
 
 typedef struct Tetra
@@ -100,7 +102,7 @@ int vertListSize;
 extern int triTable[256][16]; 
 
 
-Cell cell[DIM*DIM*DIM];
+Cell *cell;
 
 
 int cubeCorners[8];
